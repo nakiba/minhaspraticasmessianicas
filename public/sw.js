@@ -4,7 +4,7 @@
 // Como o app é um único arquivo HTML (com imagens e código já embutidos),
 // isso é suficiente para o app abrir e funcionar inteiramente offline.
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.2.1';
 const CACHE_NAME = 'praticas-messianicas-cache-v' + APP_VERSION;
 
 self.addEventListener('install', (event) => {
