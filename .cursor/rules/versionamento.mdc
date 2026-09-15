@@ -1,0 +1,19 @@
+---
+description: Incrementar o código de versão a cada alteração do app
+alwaysApply: true
+---
+
+# Versionamento
+
+A cada alteração no app, incrementa o código de versão nos **três** pontos, no mesmo patch:
+
+1. `public/index.html` — `<meta name="app-version">`, `const APP_VERSION` e o texto `#appVersion`
+2. `public/sw.js` — `const APP_VERSION` (isso também renova o cache do Service Worker)
+
+Formato `MAJOR.MINOR.PATCH`, começando em `1.0.0`:
+
+- **PATCH**: correção, texto, estilo pontual
+- **MINOR**: funcionalidade nova, sem quebrar dados existentes
+- **MAJOR**: mudança incompatível (ex.: formato de dados no `localStorage`)
+
+Não reutiliza um número já publicado. Sempre alinha os dois arquivos na mesma alteração.
