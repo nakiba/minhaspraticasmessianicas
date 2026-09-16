@@ -1,10 +1,10 @@
 // Service Worker do Diário de Práticas Messiânicas
 // Estratégia: tenta a rede primeiro; se não houver internet, usa a cópia
 // salva em cache da última vez que o app foi aberto online.
-// Como o app é um único arquivo HTML (com imagens e código já embutidos),
-// isso é suficiente para o app abrir e funcionar inteiramente offline.
+// O HTML, o manifesto, os ícones e a imagem do cabeçalho são cacheados
+// na primeira visita online, para o app abrir também offline.
 
-const APP_VERSION = '1.5.3';
+const APP_VERSION = '1.6.2';
 const CACHE_NAME = 'praticas-messianicas-cache-v' + APP_VERSION;
 
 self.addEventListener('install', (event) => {
