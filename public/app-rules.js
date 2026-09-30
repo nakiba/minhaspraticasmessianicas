@@ -119,6 +119,23 @@
       return rules.mesAnterior(y + '-' + pad2(m));
     },
 
+    assetsInstalacao: function (perfil) {
+      if (rules.isMinistro(perfil)) {
+        return {
+          manifest: 'manifest.webmanifest',
+          favicon: 'icons/favicon.png',
+          appleTouch: 'icons/apple-touch-icon.png',
+          appleTitle: 'Práticas Messiânicas'
+        };
+      }
+      return {
+        manifest: 'manifest-membro.webmanifest',
+        favicon: 'icons/favicon-membro.png',
+        appleTouch: 'icons/apple-touch-icon-membro.png',
+        appleTitle: 'Práticas membro'
+      };
+    },
+
     fmtPeriodoBR: function (monthKey, diaInicial) {
       const p = rules.periodoDoMes(monthKey, diaInicial);
       if (!p.start) return '';

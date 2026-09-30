@@ -229,6 +229,26 @@ describe('Dia inicial do período', () => {
   });
 });
 
+describe('ícones de instalação', () => {
+  it('ministro usa o manifesto e os ícones originais', () => {
+    assert.deepEqual(rules.assetsInstalacao('ministro'), {
+      manifest: 'manifest.webmanifest',
+      favicon: 'icons/favicon.png',
+      appleTouch: 'icons/apple-touch-icon.png',
+      appleTitle: 'Práticas Messiânicas'
+    });
+  });
+
+  it('membro usa manifesto e ícones próprios', () => {
+    const assets = rules.assetsInstalacao('membro');
+    assert.equal(assets.manifest, 'manifest-membro.webmanifest');
+    assert.equal(assets.favicon, 'icons/favicon-membro.png');
+    assert.equal(assets.appleTouch, 'icons/apple-touch-icon-membro.png');
+    assert.equal(assets.appleTitle, 'Práticas membro');
+    assert.deepEqual(rules.assetsInstalacao(rules.resolvePerfil('?k=8f2c')), assets);
+  });
+});
+
 describe('carregamento do módulo', () => {
   it('expõe as regras no globalThis sem CommonJS', () => {
     const context = { globalThis: {}, URLSearchParams };

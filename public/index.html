@@ -4,15 +4,33 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Diário de Práticas Messiânicas</title>
-<link rel="icon" type="image/png" href="icons/favicon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" id="appFavicon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" id="appAppleTouch" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="manifest" id="appManifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#26362E">
-<meta name="app-version" content="1.8.2">
+<meta name="app-version" content="1.9.1">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Práticas Messiânicas">
+<script>
+(function(){
+  try{
+    var params = new URLSearchParams(location.search);
+    if(params.get('k') !== '8f2c') return;
+    var man = document.getElementById('appManifest');
+    var fav = document.getElementById('appFavicon');
+    var apple = document.getElementById('appAppleTouch');
+    var title = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if(man) man.setAttribute('href', 'manifest-membro.webmanifest');
+    if(fav) fav.setAttribute('href', 'icons/favicon-membro.png');
+    if(apple) apple.setAttribute('href', 'icons/apple-touch-icon-membro.png');
+    if(title) title.setAttribute('content', 'Práticas membro');
+    var theme = document.querySelector('meta[name="theme-color"]');
+    if(theme) theme.setAttribute('content', '#BB8A3E');
+  }catch(e){}
+})();
+</script>
 <style>
   :root{
     --paper:#F4F2E6;
@@ -2141,7 +2159,7 @@
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
     <span class="app-perfil" id="appPerfilLabel"></span>
-    <span class="app-version" id="appVersion">versão 1.8.2</span>
+    <span class="app-version" id="appVersion">versão 1.9.1</span>
   </footer>
 </div>
 
@@ -2182,7 +2200,7 @@
 
 <script src="app-rules.js"></script>
 <script>
-const APP_VERSION = '1.8.2';
+const APP_VERSION = '1.9.1';
 (function(){
   const Rules = window.PraticasRules;
   const STORAGE_KEY = 'praticas-messianicas-data-v1';
@@ -2206,11 +2224,25 @@ const APP_VERSION = '1.8.2';
     fillStTipoSelect(document.getElementById('stTipo'), tipos);
     fillStTipoSelect(document.getElementById('goalStTipo'), tipos);
   }
+  function applyInstallAssets(){
+    const a = Rules.assetsInstalacao(appPerfil);
+    const man = document.getElementById('appManifest');
+    const fav = document.getElementById('appFavicon');
+    const apple = document.getElementById('appAppleTouch');
+    const title = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    const theme = document.querySelector('meta[name="theme-color"]');
+    if(man) man.setAttribute('href', a.manifest);
+    if(fav) fav.setAttribute('href', a.favicon);
+    if(apple) apple.setAttribute('href', a.appleTouch);
+    if(title) title.setAttribute('content', a.appleTitle);
+    if(theme) theme.setAttribute('content', isMinistro() ? '#26362E' : '#BB8A3E');
+  }
   function applyAppPerfil(){
     document.body.classList.toggle('perfil-membro', !isMinistro());
     document.body.classList.toggle('perfil-ministro', isMinistro());
     const perfilEl = document.getElementById('appPerfilLabel');
     if(perfilEl) perfilEl.textContent = '';
+    applyInstallAssets();
     applyStTipoPerfil();
   }
   applyAppPerfil();
