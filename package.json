@@ -1,0 +1,7 @@
+{
+  "name": "praticas-messianicas",
+  "private": true,
+  "scripts": {
+    "test": "node --test --experimental-test-coverage --test-coverage-include=public/app-rules.js --test-coverage-lines=100 --test-coverage-functions=100 --test-coverage-branches=100 test/*.test.js"
+  }
+}

@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#26362E">
-<meta name="app-version" content="1.6.2">
+<meta name="app-version" content="1.8.2">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -576,6 +576,33 @@
   }
   .obj-month label{font-size:.78rem;color:var(--ink-soft);}
   .obj-month .date-br-wrap{width:148px;}
+  .obj-month.obj-periodo{
+    flex-wrap:wrap;
+    align-items:flex-start;
+  }
+  .obj-periodo-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    width:100%;
+  }
+  .obj-dia-inicial{
+    width:72px;text-align:right;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:7px 8px;
+    font-size:16px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .obj-periodo-hint{
+    width:100%;
+    margin:0;
+    font-size:.72rem;
+    color:var(--ink-soft);
+    line-height:1.4;
+  }
   .obj-item{
     margin-bottom:16px;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -667,6 +694,13 @@
   }
   .sm-tipo-toggle label{display:flex;align-items:center;gap:5px;cursor:pointer;}
   .sm-tipo-toggle input{accent-color:var(--rust);}
+  .sm-tipo-hint{
+    flex:1 1 100%;
+    margin:0;
+    font-size:.72rem;
+    color:var(--ink-soft);
+    line-height:1.4;
+  }
   .obj-unit-label{
     display:block;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -1254,6 +1288,14 @@
     letter-spacing:.04em;
     opacity:.8;
   }
+  footer.note .app-perfil{
+    display:block;
+    margin-top:4px;
+    font-size:.65rem;
+    letter-spacing:.03em;
+  }
+  body.perfil-membro .goal-st-unidade,
+  body.perfil-membro #goalStValorVezes{display:none !important;}
   footer.note .backup-hint{
     display:block;
     margin-top:8px;
@@ -1882,7 +1924,7 @@
   <div id="panelObjetivos" class="app-tab-panel" role="tabpanel" aria-labelledby="tabObjetivos" hidden>
   <div class="card objetivos">
     <h2>Objetivos Propostos</h2>
-    <p class="eyebrow">Metas estabelecidas para cada mês</p>
+    <p class="eyebrow">Metas estabelecidas para cada período</p>
 
     <div class="obj-month">
       <label for="objMonthPicker">Mês de referência</label>
@@ -1890,6 +1932,14 @@
         <input type="text" id="objMonthPicker" inputmode="numeric" placeholder="MM/AAAA" maxlength="7" autocomplete="off">
         <input type="month" id="objMonthPickerNative" tabindex="-1" aria-label="Escolher mês de referência">
       </div>
+    </div>
+
+    <div class="obj-month obj-periodo">
+      <div class="obj-periodo-row">
+        <label for="objDiaInicial">Dia inicial do período</label>
+        <input type="number" id="objDiaInicial" min="1" max="31" inputmode="numeric" autocomplete="off" aria-describedby="objPeriodoHint">
+      </div>
+      <p class="obj-periodo-hint" id="objPeriodoHint"></p>
     </div>
 
     <div class="obj-item">
@@ -1965,8 +2015,9 @@
     <div class="obj-item">
       <span class="obj-label">Servir Monetário</span>
       <div class="sm-tipo-toggle">
-        <label><input type="radio" name="servirTipoMeta" value="valor" id="servirTipoValor" checked> Valor (R$)</label>
-        <label><input type="radio" name="servirTipoMeta" value="percentual" id="servirTipoPercentual"> Percentual (%)</label>
+        <p class="sm-tipo-hint">Valor ou percentual vale só para o tipo Mensal. Diário, Sorei-Saishi e os demais tipos são sempre em valor (R$).</p>
+        <label><input type="radio" name="servirTipoMeta" value="valor" id="servirTipoValor" checked> Mensal em valor (R$)</label>
+        <label><input type="radio" name="servirTipoMeta" value="percentual" id="servirTipoPercentual"> Mensal em percentual (%)</label>
       </div>
 
       <div class="obj-item-head" id="goalServirValorWrap">
@@ -1977,7 +2028,7 @@
         </div>
       </div>
       <div class="obj-item-head" id="goalServirPercentualWrap" style="display:none;">
-        <span class="obj-unit-label">Meta em %</span>
+        <span class="obj-unit-label">Meta do Mensal em %</span>
         <div class="obj-input-wrap">
           <input type="number" min="0" max="100" step="0.1" inputmode="decimal" id="goal-servirPercentual">
           <span class="obj-unit">% no mês</span>
@@ -2089,7 +2140,8 @@
   <footer class="note">
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
-    <span class="app-version" id="appVersion">versão 1.6.2</span>
+    <span class="app-perfil" id="appPerfilLabel"></span>
+    <span class="app-version" id="appVersion">versão 1.8.2</span>
   </footer>
 </div>
 
@@ -2128,14 +2180,40 @@
   <div id="printReportContent"></div>
 </div>
 
+<script src="app-rules.js"></script>
 <script>
-const APP_VERSION = '1.6.2';
+const APP_VERSION = '1.8.2';
 (function(){
+  const Rules = window.PraticasRules;
   const STORAGE_KEY = 'praticas-messianicas-data-v1';
   const GOALS_KEY = 'praticas-messianicas-goals-v1';
   const TIMER_KEY = 'praticas-messianicas-timer-v1';
   const CULTOS_KEY = 'praticas-messianicas-cultos-v1';
   const BACKUP_AT_KEY = 'praticas-messianicas-last-backup-v1';
+  function resolvePerfil(){
+    return Rules.resolvePerfil(location.search);
+  }
+  let appPerfil = resolvePerfil();
+  function isMinistro(){ return Rules.isMinistro(appPerfil); }
+  function fillStTipoSelect(select, tipos){
+    if(!select) return;
+    const current = select.value;
+    select.innerHTML = tipos.map(t => '<option>' + t + '</option>').join('');
+    if(tipos.indexOf(current) >= 0) select.value = current;
+  }
+  function applyStTipoPerfil(){
+    const tipos = Rules.stTiposPara(appPerfil);
+    fillStTipoSelect(document.getElementById('stTipo'), tipos);
+    fillStTipoSelect(document.getElementById('goalStTipo'), tipos);
+  }
+  function applyAppPerfil(){
+    document.body.classList.toggle('perfil-membro', !isMinistro());
+    document.body.classList.toggle('perfil-ministro', isMinistro());
+    const perfilEl = document.getElementById('appPerfilLabel');
+    if(perfilEl) perfilEl.textContent = '';
+    applyStTipoPerfil();
+  }
+  applyAppPerfil();
 
   function loadData(){
     try{
@@ -2296,6 +2374,32 @@ const APP_VERSION = '1.6.2';
     document.getElementById('objMonthPickerNative').value = monthKey;
   }
 
+  function getDiaInicial(){
+    return Rules.normalizeDiaInicial(goalsData.__diaInicial);
+  }
+  function setDiaInicial(dia){
+    goalsData.__diaInicial = Rules.normalizeDiaInicial(dia);
+    saveGoals(goalsData);
+  }
+  function periodoRef(monthKey){
+    return Rules.periodoDoMes(monthKey, getDiaInicial());
+  }
+  function monthKeyOf(dateStr){
+    return Rules.monthKeyParaData(dateStr || currentDate, getDiaInicial());
+  }
+  function datesDoPeriodo(dateList, monthKey){
+    return dateList.filter(dt => Rules.dateInPeriodo(dt, monthKey, getDiaInicial()));
+  }
+  function fmtPeriodoLabel(monthKey){
+    return Rules.fmtPeriodoBR(monthKey, getDiaInicial());
+  }
+  function diasMediaLeitura(monthKey){
+    return Rules.diasDecorridosPeriodo(monthKey, getDiaInicial(), todayISO());
+  }
+  function mediaLeituraMes(minutos, monthKey){
+    return Math.round(Rules.mediaLeitura(minutos, diasMediaLeitura(monthKey)));
+  }
+
   let currentDate = todayISO();
 
   function blankGoal(){
@@ -2303,6 +2407,7 @@ const APP_VERSION = '1.6.2';
       servirTipoMeta:'valor', servirMetaPercentual:0, servirMensalChecked:false, servirMensalOpened:false};
   }
   function getGoal(monthKey){
+    if(!/^\d{4}-\d{2}$/.test(monthKey || '')) return blankGoal();
     if(!goalsData[monthKey]) goalsData[monthKey] = blankGoal();
     const g = goalsData[monthKey];
     g.ministrado = g.ministrado || 0;
@@ -2446,7 +2551,11 @@ const APP_VERSION = '1.6.2';
     return (donativos || []).filter(d => donUnidade(d) === unidade).reduce((s,x)=>s+(Number(x.valor)||0), 0);
   }
   function isServirPercentual(dateStr){
-    return getGoal((dateStr || currentDate).slice(0,7)).servirTipoMeta === 'percentual';
+    return getGoal(monthKeyOf(dateStr || currentDate)).servirTipoMeta === 'percentual';
+  }
+  function isDonativoPercentual(tipo, dateStr){
+    const meta = getGoal(monthKeyOf(dateStr || currentDate)).servirTipoMeta;
+    return Rules.donativoUsaPercentual(tipo, meta);
   }
   function fmtServirResumo(donValor, donPct, preferUnidade){
     const parts = [];
@@ -2456,14 +2565,15 @@ const APP_VERSION = '1.6.2';
     return preferUnidade === 'percentual' ? fmtPct(0) : fmtBRL(0);
   }
   function syncDonativoInputMode(){
-    const pct = isServirPercentual(currentDate);
+    const tipo = document.getElementById('donTipo').value;
+    const pct = isDonativoPercentual(tipo, currentDate);
     const valorInput = document.getElementById('donValor');
     const pctWrap = document.getElementById('donPercentualWrap');
     const eyebrow = document.querySelector('.card.donativo .eyebrow');
     valorInput.hidden = pct;
     pctWrap.hidden = !pct;
     if(eyebrow){
-      eyebrow.textContent = pct ? 'Registro em percentual' : 'Registro de donativos';
+      eyebrow.textContent = pct ? 'Mensal em percentual' : 'Registro de donativos';
     }
   }
 
@@ -2747,7 +2857,7 @@ const APP_VERSION = '1.6.2';
 
   document.getElementById('addDonativo').addEventListener('click', ()=>{
     const tipoSelect = document.getElementById('donTipo');
-    const percentual = isServirPercentual(currentDate);
+    const percentual = isDonativoPercentual(tipoSelect.value, currentDate);
     let valor;
     if(percentual){
       const pctInput = document.getElementById('donPercentual');
@@ -2772,7 +2882,7 @@ const APP_VERSION = '1.6.2';
     });
     saveData(data);
     if(percentual){
-      const g = getGoal(currentDate.slice(0,7));
+      const g = getGoal(monthKeyOf(currentDate));
       g.servirMensalChecked = true;
       saveGoals(goalsData);
       document.getElementById('donPercentual').value = '';
@@ -2784,37 +2894,16 @@ const APP_VERSION = '1.6.2';
 
   // Servir Monetário — gate de meta em percentual (Mensal + check + abrir registro)
   function renderDonativoGate(){
-    const monthKey = currentDate.slice(0,7);
-    const g = getGoal(monthKey);
     const gateSection = document.getElementById('donativoGateSection');
     const fullSection = document.getElementById('donativoFullSection');
-    const mensalWrap = document.getElementById('donativoMensalWrap');
-    const checkWrap = document.getElementById('donativoGateCheckWrap');
-    const openBtnWrap = document.getElementById('donativoOpenBtnWrap');
-    const gateCheck = document.getElementById('donativoGateCheck');
-
     syncDonativoInputMode();
-
-    if(g.servirTipoMeta !== 'percentual' || g.servirMensalOpened){
-      gateSection.style.display = 'none';
-      fullSection.style.display = 'block';
-      return;
-    }
-
-    fullSection.style.display = 'none';
-    gateSection.style.display = 'block';
-    gateCheck.checked = g.servirMensalChecked;
-
-    // O rótulo "Mensal" e a caixa de check ficam sempre visíveis nesta
-    // etapa, para dar a opção de desmarcar caso seja necessário. O botão
-    // de incluir registro só aparece depois de marcada.
-    mensalWrap.style.display = 'block';
-    checkWrap.style.display = 'flex';
-    openBtnWrap.style.display = g.servirMensalChecked ? 'block' : 'none';
+    gateSection.style.display = 'none';
+    fullSection.style.display = 'block';
   }
+  document.getElementById('donTipo').addEventListener('change', syncDonativoInputMode);
 
   document.getElementById('donativoGateCheck').addEventListener('change', function(){
-    const monthKey = currentDate.slice(0,7);
+    const monthKey = monthKeyOf(currentDate);
     const g = getGoal(monthKey);
     g.servirMensalChecked = this.checked;
     saveGoals(goalsData);
@@ -2825,7 +2914,7 @@ const APP_VERSION = '1.6.2';
   });
 
   document.getElementById('donativoOpenBtn').addEventListener('click', ()=>{
-    const monthKey = currentDate.slice(0,7);
+    const monthKey = monthKeyOf(currentDate);
     const g = getGoal(monthKey);
     g.servirMensalOpened = true;
     saveGoals(goalsData);
@@ -2842,7 +2931,7 @@ const APP_VERSION = '1.6.2';
   function getPraticaEspecificaDefinicoes(monthKey){
     const map = {}; // descricao -> unidade ('tempo' | 'vezes')
     const g = goalsData[monthKey];
-    if(g){
+    if(g && typeof g === 'object'){
       (g.servirTempoMetas || []).forEach(m=>{
         if(m.tipo === 'Prática Específica' && m.descricao){
           map[m.descricao] = m.unidade;
@@ -2853,11 +2942,18 @@ const APP_VERSION = '1.6.2';
   }
 
   function refreshStTipoOptions(){
+    applyStTipoPerfil();
+    if(!isMinistro()){
+      toggleStEspecificaBox();
+      if(typeof toggleGoalStFields === 'function') toggleGoalStFields();
+      return;
+    }
+
     const currentValue = stTipoSelect.value;
     const oldGroup = document.getElementById('stTipoEspecificasGroup');
     if(oldGroup) oldGroup.remove();
 
-    const vigenciaMonthKey = currentDate.slice(0,7);
+    const vigenciaMonthKey = monthKeyOf(currentDate);
     const defs = getPraticaEspecificaDefinicoes(vigenciaMonthKey);
     const descricoes = Object.keys(defs).sort();
     if(descricoes.length > 0){
@@ -3071,15 +3167,15 @@ const APP_VERSION = '1.6.2';
       return;
     }
 
-    const currentMonthKey = todayISO().slice(0,7);
-    const currentEntries = entries.filter(dt => dt.startsWith(currentMonthKey));
-    const pastEntries = entries.filter(dt => !dt.startsWith(currentMonthKey));
+    const currentMonthKey = monthKeyOf(todayISO());
+    const currentEntries = entries.filter(dt => monthKeyOf(dt) === currentMonthKey);
+    const pastEntries = entries.filter(dt => monthKeyOf(dt) !== currentMonthKey);
 
     let html = '';
 
     if(currentEntries.length){
       const [cy, cm] = currentMonthKey.split('-');
-      html += `<div class="diario-current-label">${MESES[parseInt(cm,10)-1]} de ${cy} · mês atual</div>`;
+      html += `<div class="diario-current-label">${MESES[parseInt(cm,10)-1]} de ${cy} · ${fmtPeriodoLabel(currentMonthKey)}</div>`;
       html += currentEntries.map(diarioEntryHTML).join('');
     }
 
@@ -3087,7 +3183,7 @@ const APP_VERSION = '1.6.2';
       const yearMap = {};
       const yearOrder = [];
       pastEntries.forEach(dt=>{
-        const yk = dt.slice(0,4);
+        const yk = monthKeyOf(dt).slice(0,4);
         if(!yearMap[yk]){ yearMap[yk] = []; yearOrder.push(yk); }
         yearMap[yk].push(dt);
       });
@@ -3100,7 +3196,7 @@ const APP_VERSION = '1.6.2';
         const monthMap = {};
         const monthOrder = [];
         yearEntries.forEach(dt=>{
-          const mk = dt.slice(0,7);
+          const mk = monthKeyOf(dt);
           if(!monthMap[mk]){ monthMap[mk] = []; monthOrder.push(mk); }
           monthMap[mk].push(dt);
         });
@@ -3270,9 +3366,10 @@ const APP_VERSION = '1.6.2';
     return groups;
   }
 
-  function groupCardHTML(label, sub, g, highlight, cultoStat){
-    const temMedia = typeof g.dias === 'number' && g.dias > 0;
-    const mediaLeitura = temMedia ? Math.round(g.leitura / g.dias) : 0;
+  function groupCardHTML(label, sub, g, highlight, cultoStat, diasParaMedia){
+    const diasBase = typeof diasParaMedia === 'number' ? diasParaMedia : g.dias;
+    const temMedia = typeof diasBase === 'number' && diasBase > 0;
+    const mediaLeitura = temMedia ? Math.round(Rules.mediaLeitura(g.leitura, diasBase)) : 0;
     const leituraValor = temMedia
       ? `${fmtMin(g.leitura)} (média de ${mediaLeitura} min/dia)`
       : fmtMin(g.leitura);
@@ -3306,8 +3403,8 @@ const APP_VERSION = '1.6.2';
   const MESES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
   function monthSeriesForYear(yearKey, dates){
-    const yearDates = dates.filter(dt => dt.startsWith(yearKey));
-    const months = aggregate(yearDates, dt => dt.slice(0,7));
+    const yearDates = dates.filter(dt => monthKeyOf(dt).startsWith(yearKey));
+    const months = aggregate(yearDates, dt => monthKeyOf(dt));
     const series = [];
     for(let m = 1; m <= 12; m++){
       const mk = yearKey + '-' + String(m).padStart(2,'0');
@@ -3332,7 +3429,7 @@ const APP_VERSION = '1.6.2';
         recebido: g.johrei.recebido,
         recebidoGoal: goal.recebido || 0,
         auto: g.johrei.auto,
-        leituraMedia: g.dias > 0 ? g.leitura / g.dias : 0,
+        leituraMedia: Rules.mediaLeitura(g.leitura, diasMediaLeitura(mk)),
         leituraGoal: goal.leituraDia || 0,
         encaminhamentos: g.enc.encaminhamentos,
         encaminhamentosGoal: goal.encaminhamentos || 0,
@@ -3540,13 +3637,13 @@ const APP_VERSION = '1.6.2';
   const expandedMonthCards = new Set();
 
   function renderDiaCascade(dates){
-    const currentMonthKey = todayISO().slice(0,7);
+    const currentMonthKey = monthKeyOf(todayISO());
     const currentWeekStart = getWeekStart(todayISO());
     if(expandedWeeks.size === 0) expandedWeeks.add(currentWeekStart);
 
-    const monthDates = dates.filter(dt => dt.startsWith(currentMonthKey));
+    const monthDates = dates.filter(dt => monthKeyOf(dt) === currentMonthKey);
     const [y, mm] = currentMonthKey.split('-');
-    const monthLabel = `${MESES[parseInt(mm,10)-1]} de ${y}`;
+    const monthLabel = `${MESES[parseInt(mm,10)-1]} de ${y} · ${fmtPeriodoLabel(currentMonthKey)}`;
 
     if(monthDates.length === 0){
       return `<div class="hist-month-label">${monthLabel}</div>
@@ -3619,9 +3716,9 @@ const APP_VERSION = '1.6.2';
       });
 
     } else if(historyView === 'mes'){
-      const months = aggregate(dates, dt => dt.slice(0,7));
+      const months = aggregate(dates, dt => monthKeyOf(dt));
       const monthKeys = Object.keys(months).sort((a,b)=> b.localeCompare(a));
-      const currentMonthKey = todayISO().slice(0,7);
+      const currentMonthKey = monthKeyOf(todayISO());
       const currentYearKey = todayISO().slice(0,4);
 
       const yearMap = {};
@@ -3637,15 +3734,16 @@ const APP_VERSION = '1.6.2';
         const g = months[key];
         const [y, mm] = key.split('-');
         const label = `${MESES[parseInt(mm,10)-1]} de ${y}`;
-        const sub = `${g.dias} ${g.dias===1?'dia registrado':'dias registrados'}`;
+        const periodo = fmtPeriodoLabel(key);
+        const sub = `${g.dias} ${g.dias===1?'dia registrado':'dias registrados'}${periodo ? ' · ' + periodo : ''}`;
         const cultoStat = cultoStatsForMonth(key);
 
         if(key === currentMonthKey){
-          return groupCardHTML(label, sub, g, true, cultoStat);
+          return groupCardHTML(label, sub, g, true, cultoStat, diasMediaLeitura(key));
         }
 
         const expanded = expandedMonthCards.has(key);
-        const cardHtml = groupCardHTML(label, sub, g, false, cultoStat);
+        const cardHtml = groupCardHTML(label, sub, g, false, cultoStat, diasMediaLeitura(key));
         return `<div class="hist-month">
           <button type="button" class="hist-month-head" data-monthcard="${key}">
             <span class="hmh-label">${label}</span>
@@ -3699,8 +3797,12 @@ const APP_VERSION = '1.6.2';
         const g = years[key];
         const sub = `${g.dias} ${g.dias===1?'dia registrado':'dias registrados'}`;
         const cultoStat = cultoStatsForYear(key);
+        let diasAno = 0;
+        for(let m = 1; m <= 12; m++){
+          diasAno += diasMediaLeitura(key + '-' + String(m).padStart(2,'0'));
+        }
         return `<div class="hist-year-wrap">
-          ${groupCardHTML(key, sub, g, key === currentYearKey, cultoStat)}
+          ${groupCardHTML(key, sub, g, key === currentYearKey, cultoStat, diasAno)}
           ${buildYearEvolutionHTML(key, dates)}
         </div>`;
       }).join('');
@@ -3871,9 +3973,9 @@ const APP_VERSION = '1.6.2';
 
   function defaultReportRange(){
     const end = todayISO();
-    const d = new Date(end + 'T00:00:00');
-    d.setDate(1);
-    setReportRange(d.toISOString().slice(0,10), end);
+    const mk = monthKeyOf(end);
+    const p = periodoRef(mk);
+    setReportRange(p.start || end, end);
   }
 
   document.querySelectorAll('.report-quick button').forEach(btn=>{
@@ -3881,15 +3983,20 @@ const APP_VERSION = '1.6.2';
       const range = btn.dataset.range;
       const end = todayISO();
       if(range === 'month'){
-        const d = new Date(end + 'T00:00:00');
-        d.setDate(1);
-        setReportRange(d.toISOString().slice(0,10), end);
+        const mk = monthKeyOf(end);
+        const p = periodoRef(mk);
+        setReportRange(p.start || end, end);
       } else if(range === 'lastmonth'){
-        const now = new Date(end + 'T00:00:00');
-        const firstThis = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastMonthEnd = new Date(firstThis.getTime() - 86400000);
-        const lastMonthStart = new Date(lastMonthEnd.getFullYear(), lastMonthEnd.getMonth(), 1);
-        setReportRange(lastMonthStart.toISOString().slice(0,10), lastMonthEnd.toISOString().slice(0,10));
+        const mk = Rules.mesAnterior(monthKeyOf(end));
+        const p = periodoRef(mk);
+        if(p.start && p.end){
+          const endLast = new Date(p.end + 'T00:00:00');
+          endLast.setDate(endLast.getDate() - 1);
+          const y = endLast.getFullYear();
+          const mo = String(endLast.getMonth() + 1).padStart(2, '0');
+          const d = String(endLast.getDate()).padStart(2, '0');
+          setReportRange(p.start, `${y}-${mo}-${d}`);
+        }
       } else if(range === 'year'){
         setReportRange(`${end.slice(0,4)}-01-01`, end);
       }
@@ -3911,18 +4018,18 @@ const APP_VERSION = '1.6.2';
   }
 
   function buildGoalsSectionHTML(dates){
-    const monthKeys = Array.from(new Set(dates.map(dt => dt.slice(0,7)))).sort();
+    const monthKeys = Array.from(new Set(dates.map(dt => monthKeyOf(dt)))).sort();
     const sections = monthKeys.map(mk=>{
       const g = peekGoal(mk);
       if(!goalHasAnyValue(g)) return '';
 
-      const monthDates = Object.keys(data).filter(dt => dt.startsWith(mk) && dayHasRecord(data[dt]));
+      const monthDates = datesDoPeriodo(Object.keys(data), mk).filter(dt => dayHasRecord(data[dt]));
       const agg = aggregate(monthDates, () => 'm')['m'] || {johrei:{ministrado:0,recebido:0,auto:0}, leitura:0, enc:{encaminhamentos:0,outorgas:0}, donTotal:0, servirTempoTotal:0, dias:0};
-      const mediaDiaria = agg.dias > 0 ? Math.round(agg.leitura / agg.dias) : 0;
+      const mediaDiaria = mediaLeituraMes(agg.leitura, mk);
       const cultoStat = cultoStatsForMonth(mk);
 
       const [y, mm] = mk.split('-');
-      const label = `${MESES[parseInt(mm,10)-1]} de ${y}`;
+      const label = `${MESES[parseInt(mm,10)-1]} de ${y} (${fmtPeriodoLabel(mk)})`;
 
       const servirRow = g.servirTipoMeta === 'percentual'
         ? ['Servir Monetário', g.servirMensalChecked ? 'Registrado neste mês' : 'Não registrado neste mês', g.servirMetaPercentual ? `${g.servirMetaPercentual}%` : '']
@@ -3957,7 +4064,7 @@ const APP_VERSION = '1.6.2';
   }
 
   function buildCultosSectionHTML(dates){
-    const monthKeys = Array.from(new Set(dates.map(dt => dt.slice(0,7)))).sort();
+    const monthKeys = Array.from(new Set(dates.map(dt => monthKeyOf(dt)))).sort();
     const sections = monthKeys.map(mk=>{
       const items = getCultoItemsForMonth(mk);
       const state = peekCultoMonth(mk);
@@ -4032,7 +4139,7 @@ const APP_VERSION = '1.6.2';
     const goalsHtml = includeGoals ? buildGoalsSectionHTML(dates) : '';
     const cultosHtml = buildCultosSectionHTML(dates);
 
-    const mediaDiariaLeitura = g.dias > 0 ? Math.round(g.leitura / g.dias) : 0;
+    const mediaDiariaLeitura = Math.round(Rules.mediaLeitura(g.leitura, Rules.diasInclusivos(startVal, endVal)));
 
     const html = `
       <h1>Diário de Práticas Messiânicas</h1>
@@ -4150,7 +4257,7 @@ const APP_VERSION = '1.6.2';
   });
 
   // Objetivos Propostos — metas mensais
-  let objMonthKey = todayISO().slice(0,7);
+  let objMonthKey = monthKeyOf(todayISO());
 
   const goalFieldsMap = {
     'goal-ministrado': 'ministrado',
@@ -4184,14 +4291,14 @@ const APP_VERSION = '1.6.2';
   function applyPracticeProgress(monthKey, prefix){
     prefix = prefix || '';
     const g = getGoal(monthKey);
-    const datesInMonth = Object.keys(data).filter(dt => dt.startsWith(monthKey) && dayHasRecord(data[dt]));
+    const datesInMonth = datesDoPeriodo(Object.keys(data), monthKey).filter(dt => dayHasRecord(data[dt]));
     const groups = aggregate(datesInMonth, () => 'm');
     const agg = groups['m'] || {johrei:{ministrado:0,recebido:0,auto:0}, leitura:0, enc:{encaminhamentos:0,outorgas:0}, donTotal:0, servirTempoTotal:0, dias:0};
 
     updateProgressBar('ministrado', agg.johrei.ministrado, agg.johrei.ministrado, g.ministrado, prefix);
     updateProgressBar('recebido', agg.johrei.recebido, agg.johrei.recebido, g.recebido, prefix);
 
-    const mediaDiaria = agg.dias > 0 ? Math.round(agg.leitura / agg.dias) : 0;
+    const mediaDiaria = mediaLeituraMes(agg.leitura, monthKey);
     updateProgressBar('leitura', `${mediaDiaria} min/dia (média)`, mediaDiaria, g.leituraDia, prefix);
 
     updateProgressBar('encaminhamentos', agg.enc.encaminhamentos, agg.enc.encaminhamentos, g.encaminhamentos, prefix);
@@ -4215,7 +4322,7 @@ const APP_VERSION = '1.6.2';
   function renderDiarioStProgress(){
     const wrap = document.getElementById('diaStProgress');
     if(!wrap) return;
-    const monthKey = currentDate.slice(0, 7);
+    const monthKey = monthKeyOf(currentDate);
     const g = getGoal(monthKey);
     const metas = g.servirTempoMetas || [];
     if(metas.length === 0){
@@ -4249,7 +4356,7 @@ const APP_VERSION = '1.6.2';
   }
 
   function renderDiarioProgress(){
-    applyPracticeProgress(currentDate.slice(0, 7), 'dia-');
+    applyPracticeProgress(monthKeyOf(currentDate), 'dia-');
     renderDiarioStProgress();
     renderDiarioCultoProgress();
   }
@@ -4262,7 +4369,7 @@ const APP_VERSION = '1.6.2';
     return m.unidade === 'vezes' ? `${m.vezes} vezes` : fmtMin(m.minutos);
   }
   function realizadoParaMetaSt(monthKey, m){
-    const dates = Object.keys(data).filter(dt => dt.startsWith(monthKey));
+    const dates = datesDoPeriodo(Object.keys(data), monthKey);
     let minutos = 0, vezes = 0;
     dates.forEach(dt=>{
       getServirTempoContavel(dt).forEach(entry=>{
@@ -4279,7 +4386,9 @@ const APP_VERSION = '1.6.2';
   function getPraticaEspecificaDescricoes(){
     const set = new Set();
     Object.keys(goalsData).forEach(mk=>{
-      (goalsData[mk].servirTempoMetas || []).forEach(m=>{
+      const g = goalsData[mk];
+      if(!g || typeof g !== 'object') return;
+      (g.servirTempoMetas || []).forEach(m=>{
         if(m.tipo === 'Prática Específica' && m.descricao) set.add(m.descricao);
       });
     });
@@ -4334,6 +4443,13 @@ const APP_VERSION = '1.6.2';
   function toggleGoalStFields(){
     const isEspecifica = document.getElementById('goalStTipo').value === 'Prática Específica';
     document.getElementById('goalStEspecificaBox').style.display = isEspecifica ? 'block' : 'none';
+    if(!Rules.membroPodeEscolherVezes(appPerfil)){
+      const tempoRadio = document.querySelector('input[name="goalStUnidade"][value="tempo"]');
+      if(tempoRadio) tempoRadio.checked = true;
+      document.getElementById('goalStValorTempo').style.display = 'block';
+      document.getElementById('goalStValorVezes').style.display = 'none';
+      return;
+    }
     const unidade = document.querySelector('input[name="goalStUnidade"]:checked').value;
     document.getElementById('goalStValorTempo').style.display = unidade === 'tempo' ? 'block' : 'none';
     document.getElementById('goalStValorVezes').style.display = unidade === 'vezes' ? 'flex' : 'none';
@@ -4348,7 +4464,8 @@ const APP_VERSION = '1.6.2';
     const tipo = document.getElementById('goalStTipo').value;
     const isEspecifica = tipo === 'Prática Específica';
     const descricaoInput = document.getElementById('goalStDescricao');
-    const unidade = document.querySelector('input[name="goalStUnidade"]:checked').value;
+    const selecionada = document.querySelector('input[name="goalStUnidade"]:checked');
+    const unidade = Rules.unidadeMetaServirTempo(appPerfil, selecionada ? selecionada.value : 'tempo');
 
     if(isEspecifica && descricaoInput.value.trim() === ''){
       descricaoInput.focus();
@@ -4400,8 +4517,29 @@ const APP_VERSION = '1.6.2';
     document.getElementById('goalServirPercentualWrap').style.display = tipo === 'percentual' ? 'flex' : 'none';
   }
 
+  function renderPeriodoHint(){
+    const el = document.getElementById('objPeriodoHint');
+    if(!el) return;
+    const label = fmtPeriodoLabel(objMonthKey);
+    el.textContent = label ? ('Período de acompanhamento: ' + label) : '';
+  }
+
+  function applyDiaInicialFromInput(raw, persistEmpty){
+    if(raw === '' && !persistEmpty) return;
+    setDiaInicial(raw);
+    const input = document.getElementById('objDiaInicial');
+    if(input) input.value = getDiaInicial();
+    renderPeriodoHint();
+    if(typeof render === 'function') render();
+  }
+
   function renderObjetivos(){
     setMonthPickers(objMonthKey);
+    const diaInput = document.getElementById('objDiaInicial');
+    if(diaInput && document.activeElement !== diaInput){
+      diaInput.value = getDiaInicial();
+    }
+    renderPeriodoHint();
     const g = getGoal(objMonthKey);
     Object.keys(goalFieldsMap).forEach(id=>{
       const field = goalFieldsMap[id];
@@ -4435,6 +4573,17 @@ const APP_VERSION = '1.6.2';
     renderCultos();
   }
   bindMonthField('objMonthPicker', 'objMonthPickerNative', applyMonthKey);
+
+  const diaInicialInput = document.getElementById('objDiaInicial');
+  diaInicialInput.addEventListener('input', (ev)=>{
+    applyDiaInicialFromInput(ev.target.value, false);
+  });
+  diaInicialInput.addEventListener('blur', (ev)=>{
+    applyDiaInicialFromInput(ev.target.value, true);
+  });
+  diaInicialInput.addEventListener('change', (ev)=>{
+    applyDiaInicialFromInput(ev.target.value, true);
+  });
 
   Object.keys(goalFieldsMap).forEach(id=>{
     const field = goalFieldsMap[id];
