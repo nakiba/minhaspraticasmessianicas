@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" id="appAppleTouch" sizes="180x180" href="icons/apple-touch-icon.png">
 <link rel="manifest" id="appManifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#26362E">
-<meta name="app-version" content="1.9.1">
+<meta name="app-version" content="1.9.2">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2159,7 +2159,7 @@
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
     <span class="app-perfil" id="appPerfilLabel"></span>
-    <span class="app-version" id="appVersion">versão 1.9.1</span>
+    <span class="app-version" id="appVersion">versão 1.9.2</span>
   </footer>
 </div>
 
@@ -2199,10 +2199,12 @@
 </div>
 
 <script src="app-rules.js"></script>
+<script src="app-core.js"></script>
 <script>
-const APP_VERSION = '1.9.1';
+const APP_VERSION = '1.9.2';
 (function(){
   const Rules = window.PraticasRules;
+  const Core = window.PraticasCore;
   const STORAGE_KEY = 'praticas-messianicas-data-v1';
   const GOALS_KEY = 'praticas-messianicas-goals-v1';
   const TIMER_KEY = 'praticas-messianicas-timer-v1';
@@ -2280,34 +2282,11 @@ const APP_VERSION = '1.9.1';
     catch(e){ console.error('Falha ao salvar cultos', e); }
   }
 
-  const CULTO_ITEMS_BASE = [
-    {key:'solo_guarapiranga', label:'Culto Mensal de Agradecimento do Solo Sagrado de Guarapiranga'},
-    {key:'igreja', label:'Culto Mensal de Agradecimento da Igreja'},
-    {key:'johrei_center', label:'Culto Mensal de Agradecimento do Johrei Center'},
-    {key:'oracao_paraiso_lar', label:'Oração Pela Construção do Paraíso no Lar'}
-  ];
-  const CULTO_META_MES = CULTO_ITEMS_BASE.length;
-  const CULTO_ITEMS_ESPECIAIS_POR_MES = {
-    6: [
-      {key:'paraiso_terrestre_solo', label:'Culto do Paraíso Terrestre — Solo Sagrado de Guarapiranga'},
-      {key:'paraiso_terrestre_johrei_center', label:'Culto do Paraíso Terrestre — Johrei Center'}
-    ],
-    11: [
-      {key:'almas_antepassados_solo', label:'Culto às Almas dos Antepassados — Solo Sagrado de Guarapiranga'},
-      {key:'almas_antepassados_johrei_center', label:'Culto às Almas dos Antepassados — Johrei Center'}
-    ],
-    12: [
-      {key:'natalicio_meishu_solo', label:'Culto do Natalício de Meishu-Sama — Solo Sagrado de Guarapiranga'},
-      {key:'natalicio_meishu_johrei_center', label:'Culto do Natalício de Meishu-Sama — Johrei Center'}
-    ]
-  };
+  const CULTO_ITEMS_BASE = Core.CULTO_ITEMS_BASE;
+  const CULTO_META_MES = Core.CULTO_META_MES;
+  const CULTO_ITEMS_ESPECIAIS_POR_MES = Core.CULTO_ITEMS_ESPECIAIS_POR_MES;
   function getCultoItemsForMonth(monthKey){
-    const mm = parseInt(monthKey.split('-')[1], 10);
-    const items = CULTO_ITEMS_BASE.slice();
-    if(CULTO_ITEMS_ESPECIAIS_POR_MES[mm]){
-      items.push(...CULTO_ITEMS_ESPECIAIS_POR_MES[mm]);
-    }
-    return items;
+    return Core.getCultoItemsForMonth(monthKey);
   }
 
   let data = loadData();
@@ -2315,47 +2294,25 @@ const APP_VERSION = '1.9.1';
   let cultosData = loadCultos();
 
   function todayISO(){
-    const d = new Date();
-    const off = d.getTimezoneOffset();
-    const local = new Date(d.getTime() - off*60000);
-    return local.toISOString().slice(0,10);
+    return Core.todayISO();
   }
   function fmtDateBR(dt){
-    const [y,m,d] = dt.split('-');
-    return `${d}/${m}/${y}`;
+    return Core.fmtDateBR(dt);
   }
   function parseDateBR(str){
-    const match = String(str || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if(!match) return '';
-    const d = parseInt(match[1], 10);
-    const mo = parseInt(match[2], 10);
-    const y = parseInt(match[3], 10);
-    const dt = new Date(y, mo - 1, d);
-    if(dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return '';
-    return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    return Core.parseDateBR(str);
   }
   function maskDateBR(raw){
-    const digits = String(raw || '').replace(/\D/g, '').slice(0, 8);
-    if(digits.length <= 2) return digits;
-    if(digits.length <= 4) return digits.slice(0,2) + '/' + digits.slice(2);
-    return digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4);
+    return Core.maskDateBR(raw);
   }
   function fmtMonthBR(ym){
-    const [y,m] = ym.split('-');
-    return `${m}/${y}`;
+    return Core.fmtMonthBR(ym);
   }
   function parseMonthBR(str){
-    const match = String(str || '').trim().match(/^(\d{1,2})\/(\d{4})$/);
-    if(!match) return '';
-    const mo = parseInt(match[1], 10);
-    const y = parseInt(match[2], 10);
-    if(mo < 1 || mo > 12) return '';
-    return `${y}-${String(mo).padStart(2,'0')}`;
+    return Core.parseMonthBR(str);
   }
   function maskMonthBR(raw){
-    const digits = String(raw || '').replace(/\D/g, '').slice(0, 6);
-    if(digits.length <= 2) return digits;
-    return digits.slice(0,2) + '/' + digits.slice(2);
+    return Core.maskMonthBR(raw);
   }
   function bindDateField(textId, pickerId, onIso){
     const text = document.getElementById(textId);
@@ -2435,25 +2392,10 @@ const APP_VERSION = '1.9.1';
   let currentDate = todayISO();
 
   function blankGoal(){
-    return {ministrado:0, recebido:0, leituraDia:0, encaminhamentos:0, outorgas:0, servir:0, servirTempoMetas:[],
-      servirTipoMeta:'valor', servirMetaPercentual:0, servirMensalChecked:false, servirMensalOpened:false};
+    return Core.blankGoal();
   }
   function getGoal(monthKey){
-    if(!/^\d{4}-\d{2}$/.test(monthKey || '')) return blankGoal();
-    if(!goalsData[monthKey]) goalsData[monthKey] = blankGoal();
-    const g = goalsData[monthKey];
-    g.ministrado = g.ministrado || 0;
-    g.recebido = g.recebido || 0;
-    g.leituraDia = g.leituraDia || 0;
-    g.encaminhamentos = g.encaminhamentos || 0;
-    g.outorgas = g.outorgas || 0;
-    g.servir = g.servir || 0;
-    g.servirTempoMetas = g.servirTempoMetas || [];
-    g.servirTipoMeta = g.servirTipoMeta === 'percentual' ? 'percentual' : 'valor';
-    g.servirMetaPercentual = g.servirMetaPercentual || 0;
-    g.servirMensalChecked = !!g.servirMensalChecked;
-    g.servirMensalOpened = !!g.servirMensalOpened;
-    return g;
+    return Core.ensureGoal(goalsData, monthKey);
   }
 
   function getCultoMonth(monthKey){
@@ -2464,67 +2406,26 @@ const APP_VERSION = '1.9.1';
     return cultosData[monthKey] ? cultosData[monthKey] : {};
   }
   function cultoStatsForMonth(monthKey){
-    const items = getCultoItemsForMonth(monthKey);
-    const state = peekCultoMonth(monthKey);
-    const done = items.filter(it => state[it.key]).length;
-    return { done, total: CULTO_META_MES };
+    return Core.cultoStatsForMonth(monthKey, peekCultoMonth(monthKey));
   }
   function cultoStatsForYear(yearKey){
-    let done = 0, total = 0;
-    for(let m = 1; m <= 12; m++){
-      const mk = `${yearKey}-${String(m).padStart(2,'0')}`;
-      const s = cultoStatsForMonth(mk);
-      done += s.done;
-      total += s.total;
-    }
-    return { done, total };
+    return Core.cultoStatsForYear(yearKey, cultosData);
   }
 
   function blankDay(){
-    return {
-      johrei:{ministrado:0, recebido:0, auto:0},
-      leitura:0,
-      enc:{encaminhamentos:0, outorgas:0},
-      donativos:[],
-      servirTempo:[],
-      anotacao:''
-    };
+    return Core.blankDay();
   }
 
   function getDay(dateStr){
-    if(!data[dateStr]) data[dateStr] = blankDay();
-    // backfill in case of older/partial structure
-    const d = data[dateStr];
-    d.johrei = d.johrei || {ministrado:0,recebido:0,auto:0};
-    d.enc = d.enc || {encaminhamentos:0,outorgas:0};
-    d.donativos = d.donativos || [];
-    d.servirTempo = d.servirTempo || [];
-    if(typeof d.leitura !== 'number') d.leitura = 0;
-    if(typeof d.anotacao !== 'string') d.anotacao = '';
-    return d;
+    if(!data[dateStr]) data[dateStr] = Core.blankDay();
+    return Core.normalizeDay(data[dateStr]);
   }
 
   function snapshotDay(day){
-    return {
-      johrei: {ministrado: day.johrei.ministrado, recebido: day.johrei.recebido, auto: day.johrei.auto},
-      enc: {encaminhamentos: day.enc.encaminhamentos, outorgas: day.enc.outorgas},
-      leitura: day.leitura,
-      donativos: day.donativos.map(d => Object.assign({}, d)),
-      servirTempo: day.servirTempo.map(e => Object.assign({}, e)),
-      anotacao: day.anotacao
-    };
+    return Core.snapshotDay(day);
   }
   function restoreDaySnap(date, snap){
-    const day = getDay(date);
-    day.johrei.ministrado = snap.johrei.ministrado;
-    day.johrei.recebido = snap.johrei.recebido;
-    day.johrei.auto = snap.johrei.auto;
-    day.enc.encaminhamentos = snap.enc.encaminhamentos;
-    day.enc.outorgas = snap.enc.outorgas;
-    day.leitura = snap.leitura;
-    day.donativos = snap.donativos.map(d => Object.assign({}, d));
-    day.servirTempo = snap.servirTempo.map(e => Object.assign({}, e));
-    day.anotacao = snap.anotacao;
+    Core.restoreDaySnap(getDay(date), snap);
   }
   let undoTimer = null;
   let undoRestore = null;
@@ -2557,30 +2458,26 @@ const APP_VERSION = '1.9.1';
   // concluída. As demais entradas (outros tipos, ou práticas específicas
   // vindas de Objetivos Propostos, que não têm essa caixa) sempre contam.
   function servirTempoContavel(entry){
-    if(entry.tipo === 'Prática Específica' && typeof entry.concluida === 'boolean'){
-      return entry.concluida === true;
-    }
-    return true;
+    return Core.servirTempoContavel(entry);
   }
   function getServirTempoContavel(dateStr){
     return getDay(dateStr).servirTempo.filter(servirTempoContavel);
   }
 
   function fmtBRL(n){
-    return 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    return Core.fmtBRL(n);
   }
   function fmtPct(n){
-    const num = Number(n) || 0;
-    return num.toLocaleString('pt-BR', {maximumFractionDigits:2, minimumFractionDigits:0}) + '%';
+    return Core.fmtPct(n);
   }
   function donUnidade(don){
-    return don && don.unidade === 'percentual' ? 'percentual' : 'valor';
+    return Core.donUnidade(don);
   }
   function fmtDonValor(don){
-    return donUnidade(don) === 'percentual' ? fmtPct(don.valor) : fmtBRL(don.valor);
+    return Core.fmtDonValor(don);
   }
   function sumDonativosPorUnidade(donativos, unidade){
-    return (donativos || []).filter(d => donUnidade(d) === unidade).reduce((s,x)=>s+(Number(x.valor)||0), 0);
+    return Core.sumDonativosPorUnidade(donativos, unidade);
   }
   function isServirPercentual(dateStr){
     return getGoal(monthKeyOf(dateStr || currentDate)).servirTipoMeta === 'percentual';
@@ -2590,11 +2487,7 @@ const APP_VERSION = '1.9.1';
     return Rules.donativoUsaPercentual(tipo, meta);
   }
   function fmtServirResumo(donValor, donPct, preferUnidade){
-    const parts = [];
-    if(donValor) parts.push(fmtBRL(donValor));
-    if(donPct) parts.push(fmtPct(donPct));
-    if(parts.length) return parts.join(' · ');
-    return preferUnidade === 'percentual' ? fmtPct(0) : fmtBRL(0);
+    return Core.fmtServirResumo(donValor, donPct, preferUnidade);
   }
   function syncDonativoInputMode(){
     const tipo = document.getElementById('donTipo').value;
@@ -2799,11 +2692,7 @@ const APP_VERSION = '1.9.1';
   let timerIntervalId = null;
 
   function fmtHMS(totalSeconds){
-    const h = Math.floor(totalSeconds/3600);
-    const m = Math.floor((totalSeconds%3600)/60);
-    const s = totalSeconds%60;
-    const pad = n => String(n).padStart(2,'0');
-    return `${pad(h)}:${pad(m)}:${pad(s)}`;
+    return Core.fmtHMS(totalSeconds);
   }
 
   function updateTimerDisplay(){
@@ -2867,21 +2756,10 @@ const APP_VERSION = '1.9.1';
   // Donativos
   // Máscara de moeda (R$ 0,00) para o campo de valor de donativos
   function formatCurrencyInput(el){
-    let digits = el.value.replace(/\D/g, '');
-    if(digits === '') digits = '0';
-    while(digits.length < 3) digits = '0' + digits;
-    digits = digits.replace(/^0+(?=\d)/, '');
-    while(digits.length < 3) digits = '0' + digits;
-    const cents = digits.slice(-2);
-    let reais = digits.slice(0, -2).replace(/^0+(?=\d)/, '');
-    if(reais === '') reais = '0';
-    reais = reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    el.value = `R$ ${reais},${cents}`;
+    el.value = Core.formatCurrencyValue(el.value);
   }
   function parseCurrencyInput(el){
-    const digits = el.value.replace(/\D/g, '');
-    if(digits === '') return 0;
-    return parseInt(digits, 10) / 100;
+    return Core.parseCurrencyValue(el.value);
   }
   document.getElementById('donValor').addEventListener('input', function(){
     formatCurrencyInput(this);
@@ -2893,8 +2771,8 @@ const APP_VERSION = '1.9.1';
     let valor;
     if(percentual){
       const pctInput = document.getElementById('donPercentual');
-      valor = parseFloat(String(pctInput.value).replace(',', '.'));
-      if(isNaN(valor) || valor <= 0 || valor > 100){
+      valor = Core.parsePercentual(pctInput.value);
+      if(valor == null){
         pctInput.focus();
         return;
       }
@@ -3169,12 +3047,7 @@ const APP_VERSION = '1.9.1';
   const expandedDiarioMonths = new Set();
 
   function escapeHtml(str){
-    return str
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/'/g,'&#039;');
+    return Core.escapeHtml(str);
   }
 
   function diarioEntryHTML(dt){
@@ -3291,9 +3164,7 @@ const APP_VERSION = '1.9.1';
 
   // Date navigation
   function shiftDate(days){
-    const d = new Date(currentDate + 'T00:00:00');
-    d.setDate(d.getDate() + days);
-    currentDate = d.toISOString().slice(0,10);
+    currentDate = Core.shiftIsoDate(currentDate, days);
     render();
   }
   document.getElementById('prevDay').addEventListener('click', ()=>shiftDate(-1));
@@ -3309,32 +3180,19 @@ const APP_VERSION = '1.9.1';
     }
   });
 
-  const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  const DIAS_SEMANA = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const MESES = Core.MESES;
+  const DIAS_SEMANA = Core.DIAS_SEMANA;
 
   function fmtDateLong(iso){
-    const parts = iso.split('-').map(Number);
-    const y = parts[0], m = parts[1], d = parts[2];
-    const dt = new Date(y, m - 1, d);
-    const wd = DIAS_SEMANA[dt.getDay()] || '';
-    const weekday = (wd === 'domingo' || wd === 'sábado') ? wd : wd + '-feira';
-    const raw = weekday + ', ' + d + ' de ' + MESES[m - 1] + ' de ' + y;
-    return raw.charAt(0).toUpperCase() + raw.slice(1);
+    return Core.fmtDateLong(iso);
   }
 
   function fmtMin(min){
-    if(min >= 60){
-      const h = Math.floor(min/60);
-      const r = min % 60;
-      return r ? `${h}h ${r}min` : `${h}h`;
-    }
-    return `${min} min`;
+    return Core.fmtMin(min);
   }
 
   function dayHasRecord(d){
-    const hasJohrei = d.johrei && (d.johrei.ministrado||d.johrei.recebido||d.johrei.auto);
-    const hasEnc = d.enc && (d.enc.encaminhamentos||d.enc.outorgas);
-    return hasJohrei || hasEnc || d.leitura || (d.donativos && d.donativos.length) || (d.servirTempo && d.servirTempo.length);
+    return Core.dayHasRecord(d);
   }
 
   function statBlock(cls, label, value){
@@ -3347,55 +3205,14 @@ const APP_VERSION = '1.9.1';
   let historyView = 'mes';
 
   function buildPraticaBreakdown(entries){
-    const map = {};
-    entries.forEach(entry=>{
-      if(entry.tipo === 'Prática Específica'){
-        const key = entry.descricao || '(sem descrição)';
-        if(!map[key]) map[key] = {minutos:0, vezes:0};
-        if(entry.minutos > 0) map[key].minutos += entry.minutos;
-        else map[key].vezes += 1;
-      }
-    });
-    return map;
+    return Core.buildPraticaBreakdown(entries);
   }
   function mergePraticaBreakdown(target, source){
-    Object.keys(source).forEach(k=>{
-      if(!target[k]) target[k] = {minutos:0, vezes:0};
-      target[k].minutos += source[k].minutos;
-      target[k].vezes += source[k].vezes;
-    });
+    return Core.mergePraticaBreakdown(target, source);
   }
 
   function aggregate(dates, keyFn){
-    const groups = {};
-    dates.forEach(dt=>{
-      const key = keyFn(dt);
-      if(!groups[key]) groups[key] = {
-        johrei:{ministrado:0,recebido:0,auto:0},
-        leitura:0,
-        enc:{encaminhamentos:0,outorgas:0},
-        donTotal:0,
-        donPct:0,
-        servirTempoTotal:0,
-        praticaBreakdown:{},
-        dias:0
-      };
-      const d = getDay(dt);
-      const g = groups[key];
-      g.johrei.ministrado += d.johrei.ministrado;
-      g.johrei.recebido += d.johrei.recebido;
-      g.johrei.auto += d.johrei.auto;
-      g.leitura += d.leitura;
-      g.enc.encaminhamentos += d.enc.encaminhamentos;
-      g.enc.outorgas += d.enc.outorgas;
-      g.donTotal += sumDonativosPorUnidade(d.donativos, 'valor');
-      g.donPct += sumDonativosPorUnidade(d.donativos, 'percentual');
-      const contaveis = getServirTempoContavel(dt);
-      g.servirTempoTotal += contaveis.reduce((s,x)=>s+x.minutos,0);
-      mergePraticaBreakdown(g.praticaBreakdown, buildPraticaBreakdown(contaveis));
-      g.dias += 1;
-    });
-    return groups;
+    return Core.aggregate(dates, keyFn, getDay);
   }
 
   function groupCardHTML(label, sub, g, highlight, cultoStat, diasParaMedia){
@@ -3432,7 +3249,7 @@ const APP_VERSION = '1.9.1';
     </div>`;
   }
 
-  const MESES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const MESES_CURTO = Core.MESES_CURTO;
 
   function monthSeriesForYear(yearKey, dates){
     const yearDates = dates.filter(dt => monthKeyOf(dt).startsWith(yearKey));
@@ -3483,11 +3300,7 @@ const APP_VERSION = '1.9.1';
   }
 
   function chartLinePoints(values, max, padX, step, zeroY, innerH){
-    return values.map((v, i)=>{
-      const x = padX + i * step;
-      const y = max > 0 ? zeroY - (Number(v) || 0) / max * innerH : zeroY;
-      return {x, y, v: Number(v) || 0};
-    });
+    return Core.chartLinePoints(values, max, padX, step, zeroY, innerH);
   }
 
   function yearChartSVG(actual, goals, color, fmt){
@@ -3566,13 +3379,7 @@ const APP_VERSION = '1.9.1';
   }
 
   function yearChartPeak(actual, goals, fmt){
-    let aMax = 0, aIdx = -1;
-    actual.forEach((v, i)=>{ if(v > aMax){ aMax = v; aIdx = i; } });
-    const gMax = Math.max(0, ...goals);
-    const parts = [];
-    if(aMax > 0 && aIdx >= 0) parts.push('realizado máx. ' + fmt(aMax) + ' em ' + MESES[aIdx]);
-    if(gMax > 0) parts.push('meta ' + fmt(gMax));
-    return parts.join(' · ') || 'sem registro';
+    return Core.yearChartPeak(actual, goals, fmt, MESES);
   }
 
   function buildYearEvolutionHTML(yearKey, dates){
@@ -3648,20 +3455,13 @@ const APP_VERSION = '1.9.1';
   }
 
   function getWeekStart(dt){
-    const d = new Date(dt + 'T00:00:00');
-    const day = d.getDay(); // 0=dom .. 6=sáb
-    const diff = (day === 0 ? -6 : 1) - day; // volta até a segunda-feira
-    d.setDate(d.getDate() + diff);
-    return d.toISOString().slice(0,10);
+    return Core.getWeekStart(dt);
   }
   function getWeekEnd(weekStart){
-    const d = new Date(weekStart + 'T00:00:00');
-    d.setDate(d.getDate() + 6);
-    return d.toISOString().slice(0,10);
+    return Core.getWeekEnd(weekStart);
   }
   function fmtDateShort(dt){
-    const [,m,dd] = dt.split('-');
-    return `${dd}/${m}`;
+    return Core.fmtDateShort(dt);
   }
 
   const expandedWeeks = new Set();
@@ -3861,9 +3661,7 @@ const APP_VERSION = '1.9.1';
     try{
       const raw = localStorage.getItem(BACKUP_AT_KEY);
       if(!raw) return null;
-      const t = parseInt(raw, 10);
-      if(!t) return null;
-      return Math.floor((Date.now() - t) / 86400000);
+      return Core.daysSinceMs(raw);
     }catch(e){ return null; }
   }
   function markBackupNow(){
@@ -4021,14 +3819,8 @@ const APP_VERSION = '1.9.1';
       } else if(range === 'lastmonth'){
         const mk = Rules.mesAnterior(monthKeyOf(end));
         const p = periodoRef(mk);
-        if(p.start && p.end){
-          const endLast = new Date(p.end + 'T00:00:00');
-          endLast.setDate(endLast.getDate() - 1);
-          const y = endLast.getFullYear();
-          const mo = String(endLast.getMonth() + 1).padStart(2, '0');
-          const d = String(endLast.getDate()).padStart(2, '0');
-          setReportRange(p.start, `${y}-${mo}-${d}`);
-        }
+        const endLast = Core.periodEndInclusive(p.end);
+        if(endLast) setReportRange(p.start, endLast);
       } else if(range === 'year'){
         setReportRange(`${end.slice(0,4)}-01-01`, end);
       }
@@ -4042,11 +3834,11 @@ const APP_VERSION = '1.9.1';
   }
 
   function peekGoal(monthKey){
-    return goalsData[monthKey] ? goalsData[monthKey] : blankGoal();
+    return Core.peekGoal(goalsData, monthKey);
   }
 
   function goalHasAnyValue(g){
-    return (g.ministrado||0) + (g.recebido||0) + (g.leituraDia||0) + (g.encaminhamentos||0) + (g.outorgas||0) + (g.servir||0) + (g.servirMetaPercentual||0) > 0 || (g.servirTempoMetas && g.servirTempoMetas.length > 0);
+    return Core.goalHasAnyValue(g);
   }
 
   function buildGoalsSectionHTML(dates){
@@ -4305,7 +4097,7 @@ const APP_VERSION = '1.9.1';
     const bar = document.getElementById(barId);
     const text = document.getElementById(textId);
     if(!bar || !text) return;
-    const pct = meta > 0 ? Math.min(100, Math.round(realizado / meta * 100)) : 0;
+    const pct = Core.progressPct(realizado, meta);
     bar.style.width = pct + '%';
     const mLabel = metaLabel != null ? metaLabel : meta;
     text.textContent = meta > 0
@@ -4368,7 +4160,7 @@ const APP_VERSION = '1.9.1';
       const realizadoVal = m.unidade === 'vezes' ? realizado.vezes : realizado.minutos;
       const metaVal = m.unidade === 'vezes' ? m.vezes : m.minutos;
       const realizadoLabel = m.unidade === 'vezes' ? `${realizado.vezes} vezes` : fmtMin(realizado.minutos);
-      const pct = metaVal > 0 ? Math.min(100, Math.round(realizadoVal / metaVal * 100)) : 0;
+      const pct = Core.progressPct(realizadoVal, metaVal);
       return `<div class="dia-st-progress-item">
         <span class="dia-st-progress-title">${escapeHtml(metaStLabel(m))}</span>
         <div class="obj-progress">
@@ -4383,7 +4175,7 @@ const APP_VERSION = '1.9.1';
     const s = cultoStatsForMonth(objMonthKey);
     const bar = document.getElementById('dia-bar-cultos');
     if(!bar) return;
-    const pct = s.total > 0 ? Math.min(100, Math.round(s.done / s.total * 100)) : 0;
+    const pct = Core.progressPct(s.done, s.total);
     bar.style.width = pct + '%';
   }
 
@@ -4395,25 +4187,18 @@ const APP_VERSION = '1.9.1';
 
   // Metas de Servir com o Tempo — por tipo/prática, reconciliadas com o card diário
   function metaStLabel(m){
-    return m.tipo === 'Prática Específica' ? `Prática Específica — ${m.descricao}` : m.tipo;
+    return Core.metaStLabel(m);
   }
   function metaStValorLabel(m){
-    return m.unidade === 'vezes' ? `${m.vezes} vezes` : fmtMin(m.minutos);
+    return Core.metaStValorLabel(m);
   }
   function realizadoParaMetaSt(monthKey, m){
     const dates = datesDoPeriodo(Object.keys(data), monthKey);
-    let minutos = 0, vezes = 0;
+    const entries = [];
     dates.forEach(dt=>{
-      getServirTempoContavel(dt).forEach(entry=>{
-        const tipoMatch = entry.tipo === m.tipo;
-        const descMatch = m.tipo !== 'Prática Específica' || (entry.descricao || '') === (m.descricao || '');
-        if(tipoMatch && descMatch){
-          minutos += entry.minutos;
-          vezes += 1;
-        }
-      });
+      getServirTempoContavel(dt).forEach(entry=> entries.push(entry));
     });
-    return { minutos, vezes };
+    return Core.realizadoParaMetaSt(entries, m);
   }
   function getPraticaEspecificaDescricoes(){
     const set = new Set();
@@ -4444,7 +4229,7 @@ const APP_VERSION = '1.9.1';
       const realizadoVal = m.unidade === 'vezes' ? realizado.vezes : realizado.minutos;
       const metaVal = m.unidade === 'vezes' ? m.vezes : m.minutos;
       const realizadoLabel = m.unidade === 'vezes' ? `${realizado.vezes} vezes` : fmtMin(realizado.minutos);
-      const pct = metaVal > 0 ? Math.min(100, Math.round(realizadoVal / metaVal * 100)) : 0;
+      const pct = Core.progressPct(realizadoVal, metaVal);
       return `<div class="goal-st-item">
         <div class="goal-st-item-head">
           <div>
@@ -4665,7 +4450,7 @@ const APP_VERSION = '1.9.1';
   }
 
   function setAppTab(tab){
-    if(tab !== 'diario' && tab !== 'objetivos' && tab !== 'mais') tab = 'diario';
+    tab = Core.normalizeTab(tab);
     document.getElementById('panelDiario').hidden = tab !== 'diario';
     document.getElementById('panelObjetivos').hidden = tab !== 'objetivos';
     document.getElementById('panelMais').hidden = tab !== 'mais';
