@@ -1,35 +1,35 @@
 {
-  "id": "./?k=8f2c",
-  "name": "Diário de Práticas Messiânicas",
+  "id": "/diario-membro",
+  "name": "Diário de Práticas — membro",
   "short_name": "Práticas membro",
   "description": "Acompanhamento diário das Práticas Básicas da Fé Messiânica — visão de membro",
-  "start_url": "./?k=8f2c",
-  "scope": "./",
+  "start_url": "/membro/",
+  "scope": "/membro/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F4F2E6",
   "theme_color": "#BB8A3E",
   "icons": [
     {
-      "src": "icons/icon-192-membro.png",
+      "src": "/icons/icon-192-membro.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-192-membro.png",
+      "src": "/icons/icon-192-membro.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "icons/icon-512-membro.png",
+      "src": "/icons/icon-512-membro.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icons/icon-512-membro.png",
+      "src": "/icons/icon-512-membro.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

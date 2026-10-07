@@ -265,6 +265,9 @@ describe('servir com o tempo, cultos e progresso', () => {
     assert.deepEqual(core.realizadoParaMetaSt([{tipo:'Prática Específica', minutos:4}], {tipo:'Prática Específica'}), {minutos:4, vezes:1});
     assert.deepEqual(core.realizadoParaMetaSt(null, {tipo:'Outros'}), {minutos:0, vezes:0});
     assert.deepEqual(core.realizadoParaMetaSt([{tipo:'Outros'}], {tipo:'Outros'}), {minutos:0, vezes:1});
+    assert.deepEqual(core.realizadoParaMetaSt(entries, {tipo:'Meta agrupada'}, ['Outros', 'Prática Específica']), {minutos:30, vezes:2});
+    assert.deepEqual(core.realizadoParaMetaSt(entries, {tipo:'Outros'}, []), {minutos:0, vezes:0});
+    assert.deepEqual(core.realizadoParaMetaSt(entries, null), {minutos:0, vezes:0});
     assert.equal(core.progressPct(5, 10), 50);
     assert.equal(core.progressPct(20, 10), 100);
     assert.equal(core.progressPct(5, 0), 0);

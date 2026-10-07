@@ -4,33 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Diário de Práticas Messiânicas</title>
-<link rel="icon" id="appFavicon" type="image/png" href="icons/favicon.png">
-<link rel="apple-touch-icon" id="appAppleTouch" sizes="180x180" href="icons/apple-touch-icon.png">
-<link rel="manifest" id="appManifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#26362E">
-<meta name="app-version" content="1.9.2">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Práticas Messiânicas">
+<base href="/">
 <script>
 (function(){
   try{
+    var path = String(location.pathname || '');
+    var membroPath = /(^|\/)membro(\/|$)/.test(path);
     var params = new URLSearchParams(location.search);
-    if(params.get('k') !== '8f2c') return;
-    var man = document.getElementById('appManifest');
-    var fav = document.getElementById('appFavicon');
-    var apple = document.getElementById('appAppleTouch');
-    var title = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-    if(man) man.setAttribute('href', 'manifest-membro.webmanifest');
-    if(fav) fav.setAttribute('href', 'icons/favicon-membro.png');
-    if(apple) apple.setAttribute('href', 'icons/apple-touch-icon-membro.png');
-    if(title) title.setAttribute('content', 'Práticas membro');
-    var theme = document.querySelector('meta[name="theme-color"]');
-    if(theme) theme.setAttribute('content', '#BB8A3E');
+    var membroQs = params.get('k') === '8f2c';
+    if(membroQs && !membroPath){
+      params.delete('k');
+      var rest = params.toString();
+      location.replace('/membro/' + (rest ? '?' + rest : '') + (location.hash || ''));
+      return;
+    }
+    var membro = membroPath || membroQs;
+    var fav = membro ? 'icons/favicon-membro.png' : 'icons/favicon.png';
+    var apple = membro ? 'icons/apple-touch-icon-membro.png' : 'icons/apple-touch-icon.png';
+    var man = membro ? 'manifest-membro.webmanifest' : 'manifest.webmanifest';
+    var title = membro ? 'Práticas membro' : 'Práticas Messiânicas';
+    var theme = membro ? '#BB8A3E' : '#26362E';
+    document.write('<link rel="icon" id="appFavicon" type="image/png" href="'+fav+'">');
+    document.write('<link rel="apple-touch-icon" id="appAppleTouch" sizes="180x180" href="'+apple+'">');
+    document.write('<link rel="manifest" id="appManifest" href="'+man+'">');
+    document.write('<meta name="theme-color" content="'+theme+'">');
+    document.write('<meta name="apple-mobile-web-app-title" content="'+title+'">');
   }catch(e){}
 })();
 </script>
+<meta name="app-version" content="1.11.2">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   :root{
     --paper:#F4F2E6;
@@ -1299,7 +1304,7 @@
     color:var(--ink-soft);
     margin-top:30px;
   }
-  footer.note .app-version{
+  footer.note .app-version-line{
     display:block;
     margin-top:6px;
     font-size:.65rem;
@@ -1307,10 +1312,7 @@
     opacity:.8;
   }
   footer.note .app-perfil{
-    display:block;
-    margin-top:4px;
-    font-size:.65rem;
-    letter-spacing:.03em;
+    margin-left:6px;
   }
   body.perfil-membro .goal-st-unidade,
   body.perfil-membro #goalStValorVezes{display:none !important;}
@@ -2061,7 +2063,7 @@
 
     <div class="obj-item">
       <span class="obj-label">Servir com o Tempo</span>
-      <p class="obj-item-desc">Defina uma meta para cada tipo de prática. Práticas específicas só aparecem como opção no card Servir com o Tempo durante o mês de vigência da meta.</p>
+      <p class="obj-item-desc" id="goalStDesc">Defina uma meta para cada tipo de prática. Práticas específicas só aparecem como opção no card Servir com o Tempo durante o mês de vigência da meta.</p>
 
       <div class="goal-st-form">
         <select id="goalStTipo">
@@ -2158,8 +2160,7 @@
   <footer class="note">
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
-    <span class="app-perfil" id="appPerfilLabel"></span>
-    <span class="app-version" id="appVersion">versão 1.9.2</span>
+    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.11.2</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
   </footer>
 </div>
 
@@ -2201,7 +2202,7 @@
 <script src="app-rules.js"></script>
 <script src="app-core.js"></script>
 <script>
-const APP_VERSION = '1.9.2';
+const APP_VERSION = '1.11.2';
 (function(){
   const Rules = window.PraticasRules;
   const Core = window.PraticasCore;
@@ -2211,7 +2212,7 @@ const APP_VERSION = '1.9.2';
   const CULTOS_KEY = 'praticas-messianicas-cultos-v1';
   const BACKUP_AT_KEY = 'praticas-messianicas-last-backup-v1';
   function resolvePerfil(){
-    return Rules.resolvePerfil(location.search);
+    return Rules.resolvePerfil(location.search, location.pathname);
   }
   let appPerfil = resolvePerfil();
   function isMinistro(){ return Rules.isMinistro(appPerfil); }
@@ -2222,9 +2223,14 @@ const APP_VERSION = '1.9.2';
     if(tipos.indexOf(current) >= 0) select.value = current;
   }
   function applyStTipoPerfil(){
-    const tipos = Rules.stTiposPara(appPerfil);
-    fillStTipoSelect(document.getElementById('stTipo'), tipos);
-    fillStTipoSelect(document.getElementById('goalStTipo'), tipos);
+    fillStTipoSelect(document.getElementById('stTipo'), Rules.stTiposDiarioPara(appPerfil));
+    fillStTipoSelect(document.getElementById('goalStTipo'), Rules.stTiposObjetivosPara(appPerfil));
+    const desc = document.getElementById('goalStDesc');
+    if(desc){
+      desc.textContent = isMinistro()
+        ? 'Defina uma meta para cada tipo de prática. Práticas específicas só aparecem como opção no card Servir com o Tempo durante o mês de vigência da meta.'
+        : 'Defina a meta de Servir com o tempo no Takamahara. No Diário, registre o tempo em cada local; o total conta nessa meta.';
+    }
   }
   function applyInstallAssets(){
     const a = Rules.assetsInstalacao(appPerfil);
@@ -2243,7 +2249,7 @@ const APP_VERSION = '1.9.2';
     document.body.classList.toggle('perfil-membro', !isMinistro());
     document.body.classList.toggle('perfil-ministro', isMinistro());
     const perfilEl = document.getElementById('appPerfilLabel');
-    if(perfilEl) perfilEl.textContent = '';
+    if(perfilEl) perfilEl.textContent = Rules.codigoPerfil(appPerfil);
     applyInstallAssets();
     applyStTipoPerfil();
   }
@@ -4198,7 +4204,7 @@ const APP_VERSION = '1.9.2';
     dates.forEach(dt=>{
       getServirTempoContavel(dt).forEach(entry=> entries.push(entry));
     });
-    return Core.realizadoParaMetaSt(entries, m);
+    return Core.realizadoParaMetaSt(entries, m, Rules.stTiposQueContamNaMeta(appPerfil, m.tipo));
   }
   function getPraticaEspecificaDescricoes(){
     const set = new Set();

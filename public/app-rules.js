@@ -12,15 +12,33 @@
   const rules = {
     VIEW_QS: 'k',
     VIEW_MEMBRO: '8f2c',
+    MEMBRO_PATH: '/membro/',
     ST_TIPOS_MINISTRO: [
       'Dedicação na Unidade Religiosa',
       'Assistência religiosa',
       'Prática Específica',
       'Outros'
     ],
-    ST_TIPOS_MEMBRO: ['Dedicação na Unidade Religiosa'],
+    ST_TIPOS_OBJETIVOS_MEMBRO: [
+      'Servir com o tempo no Takamahara'
+    ],
+    ST_TIPOS_DIARIO_MEMBRO: [
+      'Servir com o tempo no Solo Sagrado',
+      'Servir com o tempo na Igreja Mato Grosso do Sul',
+      'Servir com o tempo no Johrei Center',
+      'Servir com o tempo no Lar(com altar)'
+    ],
+    ST_TIPOS_MEMBRO_LEGADO: [
+      'Dedicação na Unidade Religiosa'
+    ],
 
-    resolvePerfil: function (search) {
+    isMembroPath: function (pathname) {
+      const path = String(pathname || '').split('?')[0];
+      return /(^|\/)membro(\/|$)/.test(path);
+    },
+
+    resolvePerfil: function (search, pathname) {
+      if (rules.isMembroPath(pathname)) return 'membro';
       const raw = String(search || '');
       const query = raw.charAt(0) === '?' ? raw.slice(1) : raw;
       const params = new URLSearchParams(query);
@@ -28,14 +46,46 @@
       return 'ministro';
     },
 
+    urlInstalacao: function (perfil) {
+      return rules.isMinistro(perfil) ? '/' : rules.MEMBRO_PATH;
+    },
+
+    codigoPerfil: function (perfil) {
+      return rules.isMinistro(perfil) ? 'mi' : 'me';
+    },
+
     isMinistro: function (perfil) {
       return perfil !== 'membro';
     },
 
-    stTiposPara: function (perfil) {
+    stTiposDiarioPara: function (perfil) {
       return rules.isMinistro(perfil)
         ? rules.ST_TIPOS_MINISTRO.slice()
-        : rules.ST_TIPOS_MEMBRO.slice();
+        : rules.ST_TIPOS_DIARIO_MEMBRO.slice();
+    },
+
+    stTiposObjetivosPara: function (perfil) {
+      return rules.isMinistro(perfil)
+        ? rules.ST_TIPOS_MINISTRO.slice()
+        : rules.ST_TIPOS_OBJETIVOS_MEMBRO.slice();
+    },
+
+    stTiposPara: function (perfil) {
+      return rules.stTiposDiarioPara(perfil);
+    },
+
+    stFamiliaTempoMembro: function () {
+      return rules.ST_TIPOS_DIARIO_MEMBRO
+        .concat(rules.ST_TIPOS_OBJETIVOS_MEMBRO)
+        .concat(rules.ST_TIPOS_MEMBRO_LEGADO);
+    },
+
+    stTiposQueContamNaMeta: function (perfil, metaTipo) {
+      if (!metaTipo) return [];
+      if (rules.isMinistro(perfil)) return [metaTipo];
+      const familia = rules.stFamiliaTempoMembro();
+      if (familia.indexOf(metaTipo) >= 0) return familia.slice();
+      return [metaTipo];
     },
 
     unidadeMetaServirTempo: function (perfil, selecionada) {

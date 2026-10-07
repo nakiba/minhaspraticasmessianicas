@@ -27,6 +27,30 @@ describe('resolvePerfil', () => {
     assert.equal(rules.resolvePerfil('?foo=1&k=8f2c'), 'membro');
   });
 
+  it('abre membro pelo caminho /membro/', () => {
+    assert.equal(rules.isMembroPath('/membro'), true);
+    assert.equal(rules.isMembroPath('/membro/'), true);
+    assert.equal(rules.isMembroPath('/membro/index.html'), true);
+    assert.equal(rules.isMembroPath('/'), false);
+    assert.equal(rules.isMembroPath('/membership'), false);
+    assert.equal(rules.isMembroPath(''), false);
+    assert.equal(rules.resolvePerfil('', '/membro/'), 'membro');
+    assert.equal(rules.resolvePerfil('?v=1', '/membro'), 'membro');
+    assert.equal(rules.resolvePerfil('', '/'), 'ministro');
+  });
+
+  it('indica a URL de instalação de cada perfil', () => {
+    assert.equal(rules.urlInstalacao('ministro'), '/');
+    assert.equal(rules.urlInstalacao('membro'), '/membro/');
+    assert.equal(rules.urlInstalacao(undefined), '/');
+  });
+
+  it('mostra mi para ministro e me para membro', () => {
+    assert.equal(rules.codigoPerfil('ministro'), 'mi');
+    assert.equal(rules.codigoPerfil('membro'), 'me');
+    assert.equal(rules.codigoPerfil(undefined), 'mi');
+  });
+
   it('ignora o código se o nome do parâmetro estiver errado', () => {
     assert.equal(rules.resolvePerfil('?x=8f2c'), 'ministro');
     assert.equal(rules.resolvePerfil('?k=membro'), 'ministro');
@@ -53,14 +77,50 @@ describe('visão de membro em Servir com o Tempo', () => {
     ]);
   });
 
-  it('membro vê só Dedicação na Unidade Religiosa', () => {
+  it('membro usa a lista do Diário como stTiposPara', () => {
     assert.deepEqual(rules.stTiposPara('membro'), [
-      'Dedicação na Unidade Religiosa'
+      'Servir com o tempo no Solo Sagrado',
+      'Servir com o tempo na Igreja Mato Grosso do Sul',
+      'Servir com o tempo no Johrei Center',
+      'Servir com o tempo no Lar(com altar)'
     ]);
+  });
+
+  it('membro registra no Diário os quatro locais de servir', () => {
+    assert.deepEqual(rules.stTiposDiarioPara('membro'), rules.ST_TIPOS_DIARIO_MEMBRO);
+    assert.equal(rules.stTiposDiarioPara('membro').length, 4);
+  });
+
+  it('membro define em Objetivos só Servir com o tempo no Takamahara', () => {
+    assert.deepEqual(rules.stTiposObjetivosPara('membro'), [
+      'Servir com o tempo no Takamahara'
+    ]);
+    assert.deepEqual(rules.stTiposObjetivosPara('ministro'), rules.ST_TIPOS_MINISTRO);
   });
 
   it('ausência de perfil segue a visão de ministro', () => {
     assert.deepEqual(rules.stTiposPara(rules.resolvePerfil('')), rules.ST_TIPOS_MINISTRO);
+    assert.deepEqual(rules.stTiposDiarioPara(rules.resolvePerfil('')), rules.ST_TIPOS_MINISTRO);
+    assert.deepEqual(rules.stTiposObjetivosPara(rules.resolvePerfil('')), rules.ST_TIPOS_MINISTRO);
+  });
+
+  it('tempo lançado nos locais do Diário conta na meta Takamahara', () => {
+    const tipos = rules.stTiposQueContamNaMeta('membro', 'Servir com o tempo no Takamahara');
+    rules.ST_TIPOS_DIARIO_MEMBRO.forEach((tipo) => {
+      assert.ok(tipos.includes(tipo), tipo);
+    });
+    assert.ok(tipos.includes('Servir com o tempo no Takamahara'));
+    assert.ok(tipos.includes('Dedicação na Unidade Religiosa'));
+  });
+
+  it('ministro só conta o tipo exatamente igual à meta', () => {
+    assert.deepEqual(
+      rules.stTiposQueContamNaMeta('ministro', 'Assistência religiosa'),
+      ['Assistência religiosa']
+    );
+    assert.deepEqual(rules.stTiposQueContamNaMeta('membro', ''), []);
+    assert.deepEqual(rules.stTiposQueContamNaMeta('membro', undefined), []);
+    assert.deepEqual(rules.stTiposQueContamNaMeta('membro', 'Outros'), ['Outros']);
   });
 
   it('membro não pode escolher Vezes por mês', () => {
@@ -79,11 +139,21 @@ describe('visão de membro em Servir com o Tempo', () => {
 
   it('devolve uma cópia das listas de tipos', () => {
     const ministro = rules.stTiposPara('ministro');
-    const membro = rules.stTiposPara('membro');
+    const diario = rules.stTiposDiarioPara('membro');
+    const objetivos = rules.stTiposObjetivosPara('membro');
+    const familia = rules.stFamiliaTempoMembro();
     ministro.push('extra');
-    membro.push('extra');
+    diario.push('extra');
+    objetivos.push('extra');
+    familia.push('extra');
     assert.deepEqual(rules.stTiposPara('ministro'), rules.ST_TIPOS_MINISTRO);
-    assert.deepEqual(rules.stTiposPara('membro'), rules.ST_TIPOS_MEMBRO);
+    assert.deepEqual(rules.stTiposDiarioPara('membro'), rules.ST_TIPOS_DIARIO_MEMBRO);
+    assert.deepEqual(rules.stTiposObjetivosPara('membro'), rules.ST_TIPOS_OBJETIVOS_MEMBRO);
+    assert.deepEqual(rules.stFamiliaTempoMembro().slice(0, 4), rules.ST_TIPOS_DIARIO_MEMBRO);
+    assert.deepEqual(
+      rules.stTiposQueContamNaMeta('membro', 'Servir com o tempo no Solo Sagrado').slice(0, 4),
+      rules.ST_TIPOS_DIARIO_MEMBRO
+    );
   });
 });
 

@@ -426,11 +426,14 @@
       return m.unidade === 'vezes' ? m.vezes + ' vezes' : core.fmtMin(m.minutos);
     },
 
-    realizadoParaMetaSt: function (entries, meta) {
+    realizadoParaMetaSt: function (entries, meta, tiposAceitos) {
+      const tipos = Array.isArray(tiposAceitos)
+        ? tiposAceitos
+        : (meta && meta.tipo ? [meta.tipo] : []);
       let minutos = 0, vezes = 0;
       (entries || []).forEach(function (entry) {
-        const tipoMatch = entry.tipo === meta.tipo;
-        const descMatch = meta.tipo !== 'Prática Específica' || (entry.descricao || '') === (meta.descricao || '');
+        const tipoMatch = tipos.indexOf(entry.tipo) >= 0;
+        const descMatch = !meta || meta.tipo !== 'Prática Específica' || (entry.descricao || '') === (meta.descricao || '');
         if (tipoMatch && descMatch) {
           minutos += entry.minutos || 0;
           vezes += 1;
