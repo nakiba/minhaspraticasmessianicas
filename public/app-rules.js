@@ -13,6 +13,7 @@
     VIEW_QS: 'k',
     VIEW_MEMBRO: '8f2c',
     MEMBRO_PATH: '/membro/',
+    SENHA_MINISTRO: 'makoto',
     ST_TIPOS_MINISTRO: [
       'Dedicação na Unidade Religiosa',
       'Assistência religiosa',
@@ -52,6 +53,14 @@
 
     codigoPerfil: function (perfil) {
       return rules.isMinistro(perfil) ? 'mi' : 'me';
+    },
+
+    senhaMinistroValida: function (senha) {
+      return String(senha || '').trim().toLowerCase() === rules.SENHA_MINISTRO;
+    },
+
+    precisaSenhaMinistro: function (perfil, jaLiberado) {
+      return rules.isMinistro(perfil) && !jaLiberado;
     },
 
     isMinistro: function (perfil) {

@@ -32,7 +32,7 @@
   }catch(e){}
 })();
 </script>
-<meta name="app-version" content="1.11.2">
+<meta name="app-version" content="1.12.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1664,6 +1664,49 @@
     .don-pct-wrap{width:110px;}
   }
 
+  .senha-ministro-overlay{
+    z-index:3000;
+    align-items:center;
+  }
+  .senha-ministro-overlay .modal-box{max-width:380px;}
+  .senha-ministro-desc{
+    font-size:.85rem;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin:8px 0 16px;
+  }
+  .senha-ministro-form input{
+    width:100%;
+    box-sizing:border-box;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:1rem;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--paper-card);
+    color:var(--ink);
+    margin-bottom:10px;
+  }
+  .senha-ministro-erro{
+    color:#9B2C2C;
+    font-size:.8rem;
+    margin:0 0 10px;
+  }
+  .senha-ministro-form .timer-btn{width:100%;}
+  body.aguardando-senha-ministro{overflow:hidden;}
+  body.aguardando-senha-ministro .install-banner{display:none !important;}
+  .sr-only{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0,0,0,0);
+    white-space:nowrap;
+    border:0;
+  }
+
 </style>
 </head>
 <body>
@@ -2160,7 +2203,7 @@
   <footer class="note">
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
-    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.11.2</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
+    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.12.0</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
   </footer>
 </div>
 
@@ -2176,6 +2219,21 @@
       <button class="modal-close" id="diarioClose" type="button" aria-label="Fechar">×</button>
     </div>
     <div id="diarioList"></div>
+  </div>
+</div>
+
+<div class="modal-overlay senha-ministro-overlay" id="ministroSenhaOverlay" aria-hidden="true">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="ministroSenhaTitulo">
+    <div class="modal-head">
+      <h2 id="ministroSenhaTitulo">Versão do ministro</h2>
+    </div>
+    <p class="senha-ministro-desc">Para instalar a versão do ministro pela primeira vez, digite a senha.</p>
+    <form id="ministroSenhaForm" class="senha-ministro-form">
+      <label class="sr-only" for="ministroSenhaInput">Senha</label>
+      <input id="ministroSenhaInput" type="password" name="senha" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Senha" required>
+      <p class="senha-ministro-erro" id="ministroSenhaErro" hidden>Senha incorreta.</p>
+      <button type="submit" class="timer-btn">Continuar</button>
+    </form>
   </div>
 </div>
 
@@ -2199,10 +2257,10 @@
   <div id="printReportContent"></div>
 </div>
 
-<script src="app-rules.js"></script>
-<script src="app-core.js"></script>
+<script src="app-rules.js?v=1.12.0"></script>
+<script src="app-core.js?v=1.12.0"></script>
 <script>
-const APP_VERSION = '1.11.2';
+const APP_VERSION = '1.12.0';
 (function(){
   const Rules = window.PraticasRules;
   const Core = window.PraticasCore;
@@ -2211,6 +2269,7 @@ const APP_VERSION = '1.11.2';
   const TIMER_KEY = 'praticas-messianicas-timer-v1';
   const CULTOS_KEY = 'praticas-messianicas-cultos-v1';
   const BACKUP_AT_KEY = 'praticas-messianicas-last-backup-v1';
+  const MINISTRO_OK_KEY = 'praticas-messianicas-ministro-ok-v1';
   function resolvePerfil(){
     return Rules.resolvePerfil(location.search, location.pathname);
   }
@@ -4553,14 +4612,30 @@ const APP_VERSION = '1.11.2';
     }, {passive:true});
   })();
 
+  function ministroJaLiberado(){
+    try{
+      if(localStorage.getItem(MINISTRO_OK_KEY) === '1') return true;
+    }catch(e){}
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    return isMinistro() && standalone;
+  }
+  function marcarMinistroLiberado(){
+    try{ localStorage.setItem(MINISTRO_OK_KEY, '1'); }catch(e){}
+  }
+
   // Convite para instalar na tela inicial
   (function bindInstallBanner(){
     const banner = document.getElementById('installBanner');
     const btn = document.getElementById('installBannerBtn');
     const dismiss = document.getElementById('installBannerDismiss');
     const iosHint = document.getElementById('installIosHint');
+    const overlay = document.getElementById('ministroSenhaOverlay');
+    const form = document.getElementById('ministroSenhaForm');
+    const input = document.getElementById('ministroSenhaInput');
+    const erro = document.getElementById('ministroSenhaErro');
     const HIDE_KEY = 'praticas-messianicas-hide-install-v1';
     let deferred = null;
+    let podeInstalar = !Rules.precisaSenhaMinistro(appPerfil, ministroJaLiberado());
     const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
     function hiddenByUser(){
@@ -4571,7 +4646,7 @@ const APP_VERSION = '1.11.2';
       try{ localStorage.setItem(HIDE_KEY, '1'); }catch(e){}
     }
     function show(mode){
-      if(standalone || hiddenByUser()) return;
+      if(!podeInstalar || standalone || hiddenByUser()) return;
       banner.hidden = false;
       if(mode === 'ios'){
         btn.hidden = true;
@@ -4581,12 +4656,50 @@ const APP_VERSION = '1.11.2';
         iosHint.hidden = true;
       }
     }
+    function liberarInstalacao(){
+      podeInstalar = true;
+      marcarMinistroLiberado();
+      if(overlay){
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+      }
+      document.body.classList.remove('aguardando-senha-ministro');
+      if(deferred) show('prompt');
+      else if(!standalone && !hiddenByUser() && ios) show('ios');
+    }
+    function pedirSenha(){
+      if(!overlay || !form || !input) return;
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('aguardando-senha-ministro');
+      if(erro) erro.hidden = true;
+      setTimeout(function(){ input.focus(); }, 30);
+    }
+    if(isMinistro() && ministroJaLiberado()) marcarMinistroLiberado();
+    if(!podeInstalar) pedirSenha();
+    if(form){
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        if(Rules.senhaMinistroValida(input.value)){
+          if(erro) erro.hidden = true;
+          liberarInstalacao();
+        }else{
+          if(erro) erro.hidden = false;
+          input.value = '';
+          input.focus();
+        }
+      });
+    }
     window.addEventListener('beforeinstallprompt', (e)=>{
       e.preventDefault();
       deferred = e;
       show('prompt');
     });
     btn.addEventListener('click', async ()=>{
+      if(!podeInstalar){
+        pedirSenha();
+        return;
+      }
       if(!deferred) return;
       deferred.prompt();
       try{ await deferred.userChoice; }catch(e){}
@@ -4594,7 +4707,7 @@ const APP_VERSION = '1.11.2';
       hide();
     });
     dismiss.addEventListener('click', hide);
-    if(!standalone && !hiddenByUser() && ios && !window.matchMedia('(display-mode: standalone)').matches){
+    if(podeInstalar && !standalone && !hiddenByUser() && ios && !window.matchMedia('(display-mode: standalone)').matches){
       show('ios');
     }
   })();

@@ -51,6 +51,19 @@ describe('resolvePerfil', () => {
     assert.equal(rules.codigoPerfil(undefined), 'mi');
   });
 
+  it('pede senha makoto só na primeira vez do ministro', () => {
+    assert.equal(rules.SENHA_MINISTRO, 'makoto');
+    assert.equal(rules.senhaMinistroValida('makoto'), true);
+    assert.equal(rules.senhaMinistroValida(' Makoto '), true);
+    assert.equal(rules.senhaMinistroValida('errada'), false);
+    assert.equal(rules.senhaMinistroValida(''), false);
+    assert.equal(rules.senhaMinistroValida(undefined), false);
+    assert.equal(rules.precisaSenhaMinistro('ministro', false), true);
+    assert.equal(rules.precisaSenhaMinistro('ministro', true), false);
+    assert.equal(rules.precisaSenhaMinistro('membro', false), false);
+    assert.equal(rules.precisaSenhaMinistro(undefined, false), true);
+  });
+
   it('ignora o código se o nome do parâmetro estiver errado', () => {
     assert.equal(rules.resolvePerfil('?x=8f2c'), 'ministro');
     assert.equal(rules.resolvePerfil('?k=membro'), 'ministro');

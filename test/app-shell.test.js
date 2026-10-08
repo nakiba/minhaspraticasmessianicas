@@ -87,6 +87,8 @@ describe('casca do aplicativo', () => {
     assert.match(html, /id="goalStTipo"/);
     assert.match(html, /id="goalStDesc"/);
     assert.match(html, /id="appPerfilLabel"/);
+    assert.match(html, /id="ministroSenhaOverlay"/);
+    assert.match(html, /id="ministroSenhaForm"/);
     assert.match(html, /name="servirTipoMeta"/);
     assert.match(html, /<base href="\/">/);
     assert.match(html, /location\.replace\('\/membro\/'/);
