@@ -150,6 +150,71 @@ describe('visão de membro em Servir com o Tempo', () => {
     assert.equal(rules.unidadeMetaServirTempo('ministro', ''), 'tempo');
   });
 
+  it('no Diário, ministro usa tempo ou vezes conforme a meta de cada tipo', () => {
+    const metas = [
+      { tipo: 'Dedicação na Unidade Religiosa', unidade: 'tempo', minutos: 120 },
+      { tipo: 'Assistência religiosa', unidade: 'vezes', vezes: 4 },
+      { tipo: 'Prática Específica', descricao: 'Limpeza', unidade: 'vezes', vezes: 2 }
+    ];
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Assistência religiosa', metas),
+      'vezes'
+    );
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Dedicação na Unidade Religiosa', metas),
+      'tempo'
+    );
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Outros', metas),
+      'tempo'
+    );
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Prática Específica', metas, 'Limpeza'),
+      'vezes'
+    );
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Prática Específica', metas, 'Outra'),
+      'tempo'
+    );
+    assert.equal(
+      rules.unidadeDiarioServirTempo('membro', 'Assistência religiosa', metas),
+      'tempo'
+    );
+    assert.equal(rules.unidadeDiarioServirTempo('ministro', '', metas), 'tempo');
+    assert.equal(rules.unidadeDiarioServirTempo('ministro', undefined, metas), 'tempo');
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Prática Específica', [{ tipo: 'Prática Específica', unidade: 'vezes' }]),
+      'vezes'
+    );
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Outros', [{ tipo: 'Outros' }]),
+      'tempo'
+    );
+    assert.equal(rules.unidadeDiarioServirTempo('ministro', 'Assistência religiosa', null), 'tempo');
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Assistência religiosa', [null, { tipo: 'Assistência religiosa', unidade: 'vezes' }]),
+      'vezes'
+    );
+    const repetida = metas.concat([{ tipo: 'Assistência religiosa', unidade: 'tempo', minutos: 30 }]);
+    assert.equal(
+      rules.unidadeDiarioServirTempo('ministro', 'Assistência religiosa', repetida),
+      'tempo'
+    );
+    assert.equal(
+      rules.entradaServirTempoEhVezes({ tipo: 'Assistência religiosa', minutos: 0 }, 'ministro', metas),
+      true
+    );
+    assert.equal(
+      rules.entradaServirTempoEhVezes({ tipo: 'Dedicação na Unidade Religiosa', minutos: 30 }, 'ministro', metas),
+      false
+    );
+    assert.equal(
+      rules.entradaServirTempoEhVezes({ tipo: 'Outros', unidade: 'vezes', minutos: 0 }, 'ministro', []),
+      true
+    );
+    assert.equal(rules.entradaServirTempoEhVezes(null, 'ministro', metas), false);
+  });
+
   it('devolve uma cópia das listas de tipos', () => {
     const ministro = rules.stTiposPara('ministro');
     const diario = rules.stTiposDiarioPara('membro');

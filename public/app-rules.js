@@ -102,6 +102,24 @@
       return selecionada === 'vezes' ? 'vezes' : 'tempo';
     },
 
+    unidadeDiarioServirTempo: function (perfil, tipo, metas, descricao) {
+      if (!rules.isMinistro(perfil) || !tipo) return 'tempo';
+      const list = Array.isArray(metas) ? metas : [];
+      const matches = list.filter(function (m) {
+        if (!m || m.tipo !== tipo) return false;
+        if (tipo === 'Prática Específica') return (m.descricao || '') === (descricao || '');
+        return true;
+      });
+      const found = matches.length ? matches[matches.length - 1] : null;
+      return found && found.unidade === 'vezes' ? 'vezes' : 'tempo';
+    },
+
+    entradaServirTempoEhVezes: function (entry, perfil, metas) {
+      if (!entry) return false;
+      if (entry.unidade === 'vezes') return true;
+      return rules.unidadeDiarioServirTempo(perfil, entry.tipo, metas, entry.descricao) === 'vezes';
+    },
+
     membroPodeEscolherVezes: function (perfil) {
       return rules.isMinistro(perfil);
     },

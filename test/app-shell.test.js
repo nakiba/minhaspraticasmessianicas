@@ -26,8 +26,8 @@ describe('casca do aplicativo', () => {
 
   it('carrega as regras, o núcleo e os dois manifestos', () => {
     const html = read('index.html');
-    assert.match(html, /src="app-rules\.js"/);
-    assert.match(html, /src="app-core\.js"/);
+    assert.match(html, /src="app-rules\.js(\?v=[^"]+)?"/);
+    assert.match(html, /src="app-core\.js(\?v=[^"]+)?"/);
     assert.match(html, /manifest-membro\.webmanifest/);
     assert.match(html, /favicon-membro\.png/);
     assert.ok(fs.existsSync(path.join(publicDir, 'app-rules.js')));

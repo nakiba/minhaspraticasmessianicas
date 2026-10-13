@@ -32,7 +32,7 @@
   }catch(e){}
 })();
 </script>
-<meta name="app-version" content="1.12.0">
+<meta name="app-version" content="1.13.1">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -2106,7 +2106,7 @@
 
     <div class="obj-item">
       <span class="obj-label">Servir com o Tempo</span>
-      <p class="obj-item-desc" id="goalStDesc">Defina uma meta para cada tipo de prática. Práticas específicas só aparecem como opção no card Servir com o Tempo durante o mês de vigência da meta.</p>
+      <p class="obj-item-desc" id="goalStDesc">Defina uma meta para cada tipo de prática. Para cada tipo, escolha se a meta é em tempo (h/min) ou em vezes. Práticas específicas só aparecem como opção no card Servir com o Tempo durante o mês de vigência da meta.</p>
 
       <div class="goal-st-form">
         <select id="goalStTipo">
@@ -2203,7 +2203,7 @@
   <footer class="note">
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
-    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.12.0</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
+    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.13.1</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
   </footer>
 </div>
 
@@ -2257,10 +2257,10 @@
   <div id="printReportContent"></div>
 </div>
 
-<script src="app-rules.js?v=1.12.0"></script>
-<script src="app-core.js?v=1.12.0"></script>
+<script src="app-rules.js?v=1.13.1"></script>
+<script src="app-core.js?v=1.13.1"></script>
 <script>
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.13.1';
 (function(){
   const Rules = window.PraticasRules;
   const Core = window.PraticasCore;
@@ -2287,7 +2287,7 @@ const APP_VERSION = '1.12.0';
     const desc = document.getElementById('goalStDesc');
     if(desc){
       desc.textContent = isMinistro()
-        ? 'Defina uma meta para cada tipo de prática. Práticas específicas só aparecem como opção no card Servir com o Tempo durante o mês de vigência da meta.'
+        ? 'Defina uma meta para cada tipo de prática. Para cada tipo, escolha se a meta é em tempo (h/min) ou em vezes. Práticas específicas só aparecem como opção no card Servir com o Tempo durante o mês de vigência da meta.'
         : 'Defina a meta de Servir com o tempo no Takamahara. No Diário, registre o tempo em cada local; o total conta nessa meta.';
     }
   }
@@ -2617,12 +2617,23 @@ const APP_VERSION = '1.12.0';
     const stList = document.getElementById('servirTempoList');
     stList.innerHTML = '';
     let stTotalMin = 0;
+    let stTotalVezes = 0;
+    const stMetasDoDia = (getGoal(monthKeyOf(currentDate)).servirTempoMetas || []);
     day.servirTempo.forEach((entry, idx)=>{
-      stTotalMin += entry.minutos;
+      const ehVezes = Rules.entradaServirTempoEhVezes(entry, appPerfil, stMetasDoDia);
+      if(ehVezes) stTotalVezes += 1;
+      else stTotalMin += entry.minutos || 0;
       const row = document.createElement('div');
       row.className = 'st-item';
       let label;
-      if(entry.tipo === 'Prática Específica'){
+      if(ehVezes){
+        if(entry.tipo === 'Prática Específica'){
+          const desc = entry.descricao ? escapeHtml(entry.descricao) : 'Prática Específica';
+          label = `<span class="tipo">${desc} realizada</span>`;
+        } else {
+          label = `1 vez <span class="tipo">— ${escapeHtml(entry.tipo)}</span>`;
+        }
+      } else if(entry.tipo === 'Prática Específica'){
         const desc = entry.descricao ? escapeHtml(entry.descricao) : '';
         if(entry.minutos === 0){
           label = `<span class="tipo">${desc} realizada</span>`;
@@ -2633,7 +2644,7 @@ const APP_VERSION = '1.12.0';
           label = `${fmtMin(entry.minutos)} <span class="tipo">— Prática Específica: ${desc}${statusPart}</span>`;
         }
       } else {
-        label = `${fmtMin(entry.minutos)} <span class="tipo">— ${entry.tipo}</span>`;
+        label = `${fmtMin(entry.minutos)} <span class="tipo">— ${escapeHtml(entry.tipo)}</span>`;
       }
       row.innerHTML = `<span>${label}</span>`;
       const del = document.createElement('button');
@@ -2651,7 +2662,10 @@ const APP_VERSION = '1.12.0';
     const stTotalEl = document.getElementById('servirTempoTotal');
     const stTotalWrap = document.getElementById('stTotalWrap');
     if(day.servirTempo.length > 0){
-      stTotalEl.textContent = fmtMin(stTotalMin);
+      const partes = [];
+      if(stTotalMin > 0) partes.push(fmtMin(stTotalMin));
+      if(stTotalVezes > 0) partes.push(stTotalVezes + (stTotalVezes === 1 ? ' vez' : ' vezes'));
+      stTotalEl.textContent = partes.join(' · ') || '0';
       stTotalWrap.style.display = 'flex';
     } else {
       stTotalWrap.style.display = 'none';
@@ -2955,13 +2969,20 @@ const APP_VERSION = '1.12.0';
     toggleStEspecificaBox();
   }
 
+  function unidadeStDoDiario(){
+    const val = stTipoSelect.value;
+    const isDynamicEspecifica = val.startsWith('especifica::');
+    const selectedOption = stTipoSelect.options[stTipoSelect.selectedIndex];
+    const tipo = isDynamicEspecifica ? 'Prática Específica' : val;
+    const descricao = isDynamicEspecifica ? selectedOption.textContent : '';
+    const metas = (getGoal(monthKeyOf(currentDate)).servirTempoMetas || []);
+    return Rules.unidadeDiarioServirTempo(appPerfil, tipo, metas, descricao);
+  }
+
   function toggleStEspecificaBox(){
     const val = stTipoSelect.value;
     const isGenericEspecifica = val === 'Prática Específica';
-    const isDynamicEspecifica = val.startsWith('especifica::');
-    const selectedOption = stTipoSelect.options[stTipoSelect.selectedIndex];
-    const unidade = isDynamicEspecifica ? selectedOption.dataset.unidade : null;
-    const isVezes = isDynamicEspecifica && unidade === 'vezes';
+    const isVezes = unidadeStDoDiario() === 'vezes';
 
     document.getElementById('stDescricaoWrap').style.display = isGenericEspecifica ? 'block' : 'none';
     document.getElementById('stVezesNote').style.display = isVezes ? 'block' : 'none';
@@ -2989,8 +3010,7 @@ const APP_VERSION = '1.12.0';
     const isGenericEspecifica = val === 'Prática Específica';
     const isDynamicEspecifica = val.startsWith('especifica::');
     const selectedOption = stTipoSelect.options[stTipoSelect.selectedIndex];
-    const unidade = isDynamicEspecifica ? selectedOption.dataset.unidade : null;
-    const isVezes = isDynamicEspecifica && unidade === 'vezes';
+    const isVezes = unidadeStDoDiario() === 'vezes';
 
     let totalMin;
     if(typeof minutosOverride === 'number'){
@@ -3032,8 +3052,9 @@ const APP_VERSION = '1.12.0';
       entry.descricao = selectedOption.textContent;
     } else {
       entry.tipo = val;
-      entry.minutos = totalMin;
+      entry.minutos = isVezes ? 0 : totalMin;
     }
+    if(isVezes) entry.unidade = 'vezes';
 
     const day = getDay(currentDate);
     day.servirTempo.push(entry);
@@ -3088,6 +3109,7 @@ const APP_VERSION = '1.12.0';
     } else {
       const val = stTipoSelect.value;
       const isGenericEspecifica = val === 'Prática Específica';
+      if(unidadeStDoDiario() === 'vezes') return;
       if(isGenericEspecifica && document.getElementById('stDescricao').value.trim() === ''){
         document.getElementById('stDescricao').focus();
         return;

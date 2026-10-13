@@ -4,7 +4,7 @@
 // O HTML, o manifesto, os ícones e a imagem do cabeçalho são cacheados
 // na primeira visita online, para o app abrir também offline.
 
-const APP_VERSION = '1.12.0';
+const APP_VERSION = '1.13.1';
 const CACHE_NAME = 'praticas-messianicas-cache-v' + APP_VERSION;
 
 self.addEventListener('install', (event) => {
