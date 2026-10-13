@@ -8,7 +8,8 @@ Os dados ficam no próprio dispositivo (navegador). Há backup para exportar e r
 
 Abra a versão publicada:
 
-- https://minhaspraticasmessianicas.web.app
+- Responsável de Unidade: https://minhaspraticasmessianicas.web.app
+- Ministros dedicantes/Membros: https://minhaspraticasmessianicas.web.app/?k=8f2c
 
 Para testar localmente:
 
@@ -16,7 +17,7 @@ Para testar localmente:
 python3 -m http.server 8080 --directory public
 ```
 
-Depois acesse http://127.0.0.1:8080
+Depois acesse http://127.0.0.1:8080 (Responsável de Unidade) ou http://127.0.0.1:8080/?k=8f2c (Ministros dedicantes/Membros).
 
 ## Publicar
 
