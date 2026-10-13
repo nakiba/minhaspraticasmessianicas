@@ -26,7 +26,7 @@
   }catch(e){}
 })();
 </script>
-<meta name="app-version" content="1.14.0">
+<meta name="app-version" content="1.14.2">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1825,7 +1825,7 @@
     <p class="eyebrow">Pessoas encaminhadas e Ohikari outorgado</p>
 
     <div class="subrow">
-      <span class="label">Encaminhamento
+      <span class="label">Acompanhamento
         <span class="sub">pessoas encaminhadas à Unidade Religiosa</span>
       </span>
       <div class="counter">
@@ -2043,7 +2043,7 @@
 
     <div class="obj-item">
       <div class="obj-item-head">
-        <span class="obj-label">Encaminhamento de pessoas</span>
+        <span class="obj-label">Acompanhamento de pessoas</span>
         <div class="obj-input-wrap">
           <input type="number" min="0" inputmode="numeric" id="goal-encaminhamentos">
           <span class="obj-unit">no mês</span>
@@ -2197,7 +2197,7 @@
   <footer class="note">
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
-    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.14.0</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
+    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.14.2</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
   </footer>
 </div>
 
@@ -2251,10 +2251,10 @@
   <div id="printReportContent"></div>
 </div>
 
-<script src="app-rules.js?v=1.14.0"></script>
-<script src="app-core.js?v=1.14.0"></script>
+<script src="app-rules.js?v=1.14.2"></script>
+<script src="app-core.js?v=1.14.2"></script>
 <script>
-const APP_VERSION = '1.14.0';
+const APP_VERSION = '1.14.2';
 (function(){
   const Rules = window.PraticasRules;
   const Core = window.PraticasCore;
@@ -3944,7 +3944,7 @@ const APP_VERSION = '1.14.0';
         ['Johrei Ministrado', agg.johrei.ministrado, g.ministrado],
         ['Johrei Recebido', agg.johrei.recebido, g.recebido],
         ['Leitura (média diária)', `${mediaDiaria} min/dia`, g.leituraDia ? `${g.leituraDia} min/dia` : ''],
-        ['Encaminhamento de pessoas', agg.enc.encaminhamentos, g.encaminhamentos],
+        ['Acompanhamento de pessoas', agg.enc.encaminhamentos, g.encaminhamentos],
         ['Outorgas de Ohikari', agg.enc.outorgas, g.outorgas],
         servirRow,
         ['Participação nos Cultos', `${cultoStat.done} de ${cultoStat.total}`, cultoStat.total]
