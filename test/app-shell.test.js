@@ -94,4 +94,31 @@ describe('casca do aplicativo', () => {
     assert.doesNotMatch(html, /location\.replace\('\/membro\/'/);
     assert.doesNotMatch(html, /id="installVersoes"/);
   });
+
+  it('não esconde o importador de backup com display:none (quebra o iOS)', () => {
+    const html = read('index.html');
+    const input = html.match(/<input type="file" id="importFile"[^>]*>/);
+    assert.ok(input, 'campo de importação');
+    assert.match(input[0], /class="[^"]*sr-only/);
+    assert.doesNotMatch(input[0], /display:\s*none/);
+  });
+
+  it('reconhece iPadOS (UA Macintosh) no convite de instalação', () => {
+    const html = read('index.html');
+    assert.match(html, /MacIntel/);
+    assert.match(html, /maxTouchPoints/);
+    assert.match(html, /navigator\.canShare/);
+    assert.match(html, /praticas-messianicas-st-timer-v1/);
+  });
+
+  it('o service worker não intercepta o próprio script', () => {
+    const sw = read('sw.js');
+    assert.match(sw, /pathname\.endsWith\('\/sw\.js'\)/);
+  });
+
+  it('as abas grudam abaixo da área segura do iOS', () => {
+    const html = read('index.html');
+    assert.match(html, /top:\s*var\(--safe-top\)/);
+    assert.match(html, /top:\s*calc\(var\(--tabbar-h\) \+ var\(--safe-top\)\)/);
+  });
 });

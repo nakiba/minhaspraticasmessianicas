@@ -26,7 +26,7 @@
   }catch(e){}
 })();
 </script>
-<meta name="app-version" content="1.14.2">
+<meta name="app-version" content="1.14.3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1420,7 +1420,7 @@
     position:sticky;
     left:auto;
     right:auto;
-    top:0;
+    top: var(--safe-top);
     bottom:auto;
     transform:none;
     width:auto;
@@ -1450,7 +1450,7 @@
 
   .date-sticky{
     position:sticky;
-    top: var(--tabbar-h);
+    top: calc(var(--tabbar-h) + var(--safe-top));
     z-index:28;
     background:var(--paper);
     padding:4px 0 8px;
@@ -2189,7 +2189,7 @@
       <button id="exportBtn" type="button">Exportar backup</button>
       <button id="importBtn" type="button" class="secondary">Importar backup</button>
     </div>
-    <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
+    <input type="file" id="importFile" class="sr-only" accept="application/json,.json" tabindex="-1" aria-hidden="true">
     <div class="backup-msg" id="backupMsg"></div>
   </section>
   </div>
@@ -2197,7 +2197,7 @@
   <footer class="note">
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
-    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.14.2</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
+    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.14.3</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
   </footer>
 </div>
 
@@ -2251,16 +2251,17 @@
   <div id="printReportContent"></div>
 </div>
 
-<script src="app-rules.js?v=1.14.2"></script>
-<script src="app-core.js?v=1.14.2"></script>
+<script src="app-rules.js?v=1.14.3"></script>
+<script src="app-core.js?v=1.14.3"></script>
 <script>
-const APP_VERSION = '1.14.2';
+const APP_VERSION = '1.14.3';
 (function(){
   const Rules = window.PraticasRules;
   const Core = window.PraticasCore;
   const STORAGE_KEY = 'praticas-messianicas-data-v1';
   const GOALS_KEY = 'praticas-messianicas-goals-v1';
   const TIMER_KEY = 'praticas-messianicas-timer-v1';
+  const ST_TIMER_KEY = 'praticas-messianicas-st-timer-v1';
   const CULTOS_KEY = 'praticas-messianicas-cultos-v1';
   const BACKUP_AT_KEY = 'praticas-messianicas-last-backup-v1';
   const MINISTRO_OK_KEY = 'praticas-messianicas-ministro-ok-v1';
@@ -2825,6 +2826,11 @@ const APP_VERSION = '1.14.2';
     startTimerTick();
   }
   updateTimerDisplay();
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState !== 'visible') return;
+    updateTimerDisplay();
+    updateStTimerDisplay();
+  });
 
   // Donativos
   // Máscara de moeda (R$ 0,00) para o campo de valor de donativos
@@ -3065,15 +3071,41 @@ const APP_VERSION = '1.14.2';
     addServirTempoEntry();
   });
 
-  // Cronômetro pequeno — registra automaticamente ao parar
-  let stTimerState = null; // { startTs } enquanto em andamento
+  // Cronômetro pequeno — registra automaticamente ao parar.
+  // Persiste o início no localStorage: o iOS suspende ou recarrega a
+  // página em segundo plano, e o setInterval sozinho não sobrevive.
+  let stTimerState = null; // { startTs, tipo, descricao } quando em andamento
   let stTimerIntervalId = null;
+
+  function loadStTimerState(){
+    try{
+      const raw = localStorage.getItem(ST_TIMER_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function saveStTimerState(state){
+    try{
+      if(state) localStorage.setItem(ST_TIMER_KEY, JSON.stringify(state));
+      else localStorage.removeItem(ST_TIMER_KEY);
+    }catch(e){ console.error('Falha ao salvar cronômetro de servir', e); }
+  }
+  function applyStTimerForm(state){
+    if(!state) return;
+    if(state.tipo){
+      const exists = Array.from(stTipoSelect.options).some(o => o.value === state.tipo);
+      if(exists) stTipoSelect.value = state.tipo;
+    }
+    if(typeof state.descricao === 'string'){
+      document.getElementById('stDescricao').value = state.descricao;
+    }
+    toggleStEspecificaBox();
+  }
 
   function updateStTimerDisplay(){
     const displayEl = document.getElementById('stTimerDisplay');
     const btn = document.getElementById('stTimerToggleBtn');
     if(!displayEl || !btn) return;
-    if(stTimerState){
+    if(stTimerState && stTimerState.startTs){
       const elapsedSec = Math.floor((Date.now() - stTimerState.startTs) / 1000);
       displayEl.textContent = fmtHMS(elapsedSec);
       btn.textContent = 'Parar e registrar';
@@ -3093,10 +3125,12 @@ const APP_VERSION = '1.14.2';
   }
 
   document.getElementById('stTimerToggleBtn').addEventListener('click', ()=>{
-    if(stTimerState){
+    if(stTimerState && stTimerState.startTs){
+      applyStTimerForm(stTimerState);
       const elapsedSec = Math.floor((Date.now() - stTimerState.startTs) / 1000);
       const minutes = Math.round(elapsedSec / 60);
       stTimerState = null;
+      saveStTimerState(null);
       stopStTimerTick();
       addServirTempoEntry(minutes);
       updateStTimerDisplay();
@@ -3108,7 +3142,12 @@ const APP_VERSION = '1.14.2';
         document.getElementById('stDescricao').focus();
         return;
       }
-      stTimerState = { startTs: Date.now() };
+      stTimerState = {
+        startTs: Date.now(),
+        tipo: val,
+        descricao: document.getElementById('stDescricao').value
+      };
+      saveStTimerState(stTimerState);
       startStTimerTick();
       updateStTimerDisplay();
     }
@@ -3789,7 +3828,7 @@ const APP_VERSION = '1.14.2';
     el.className = 'backup-msg ' + (isError ? 'err' : 'ok');
   }
 
-  document.getElementById('exportBtn').addEventListener('click', ()=>{
+  document.getElementById('exportBtn').addEventListener('click', async ()=>{
     try{
       const payload = {
         app: 'diario-praticas-messianicas',
@@ -3798,16 +3837,29 @@ const APP_VERSION = '1.14.2';
         goals: goalsData,
         cultos: cultosData
       };
+      const stamp = todayISO();
+      const filename = `backup-praticas-messianicas-${stamp}.json`;
       const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+      const file = new File([blob], filename, {type:'application/json'});
+      if(navigator.canShare && navigator.canShare({ files: [file] })){
+        try{
+          await navigator.share({ files: [file], title: filename });
+          markBackupNow();
+          showBackupMsg('Backup exportado. Guarde o arquivo em local seguro.', false);
+          return;
+        }catch(shareErr){
+          if(shareErr && shareErr.name === 'AbortError') return;
+        }
+      }
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      const stamp = todayISO();
       a.href = url;
-      a.download = `backup-praticas-messianicas-${stamp}.json`;
+      a.download = filename;
+      a.rel = 'noopener';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setTimeout(()=> URL.revokeObjectURL(url), 2000);
       markBackupNow();
       showBackupMsg('Backup exportado. Guarde o arquivo em local seguro.', false);
     }catch(e){
@@ -4653,7 +4705,8 @@ const APP_VERSION = '1.14.2';
     let deferred = null;
     let podeInstalar = !Rules.precisaSenhaMinistro(appPerfil, ministroJaLiberado());
     const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const ua = navigator.userAgent || '';
+    const ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     function hiddenByUser(){
       try{ return localStorage.getItem(HIDE_KEY) === '1'; }catch(e){ return false; }
     }
@@ -4732,6 +4785,12 @@ const APP_VERSION = '1.14.2';
   renderObjetivos();
   renderCultos();
   refreshStDescricaoOptions(); refreshStTipoOptions();
+  stTimerState = loadStTimerState();
+  if(stTimerState && stTimerState.startTs){
+    applyStTimerForm(stTimerState);
+    startStTimerTick();
+    updateStTimerDisplay();
+  }
   render();
 })();
 

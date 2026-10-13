@@ -4,7 +4,7 @@
 // O HTML, o manifesto, os ícones e a imagem do cabeçalho são cacheados
 // na primeira visita online, para o app abrir também offline.
 
-const APP_VERSION = '1.14.2';
+const APP_VERSION = '1.14.3';
 const CACHE_NAME = 'praticas-messianicas-cache-v' + APP_VERSION;
 
 self.addEventListener('install', (event) => {
@@ -44,6 +44,13 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   // Só trata requisições de navegação/página (GET). Ignora o resto.
   if (event.request.method !== 'GET') return;
+
+  const reqUrl = new URL(event.request.url);
+  // Deixa o navegador atualizar o próprio Service Worker. Interceptar
+  // sw.js no iOS/Safari atrasa ou impede a troca de versão.
+  if (reqUrl.origin === self.location.origin && reqUrl.pathname.endsWith('/sw.js')) {
+    return;
+  }
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
