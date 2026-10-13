@@ -55,9 +55,9 @@ describe('casca do aplicativo', () => {
     const ministro = JSON.parse(read('manifest.webmanifest'));
     const membro = JSON.parse(read('manifest-membro.webmanifest'));
     assert.equal(ministro.start_url, '/');
-    assert.equal(membro.start_url, '/membro/');
+    assert.equal(membro.start_url, '/?k=8f2c');
     assert.equal(ministro.scope, '/');
-    assert.equal(membro.scope, '/membro/');
+    assert.equal(membro.scope, '/');
     assert.equal(ministro.id, '/diario-ministro');
     assert.equal(membro.id, '/diario-membro');
     assert.notEqual(ministro.id, membro.id);
@@ -91,7 +91,7 @@ describe('casca do aplicativo', () => {
     assert.match(html, /id="ministroSenhaForm"/);
     assert.match(html, /name="servirTipoMeta"/);
     assert.match(html, /<base href="\/">/);
-    assert.match(html, /location\.replace\('\/membro\/'/);
+    assert.doesNotMatch(html, /location\.replace\('\/membro\/'/);
     assert.doesNotMatch(html, /id="installVersoes"/);
   });
 });

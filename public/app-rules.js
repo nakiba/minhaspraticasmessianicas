@@ -47,8 +47,12 @@
       return 'ministro';
     },
 
+    urlMembro: function () {
+      return '/?' + rules.VIEW_QS + '=' + rules.VIEW_MEMBRO;
+    },
+
     urlInstalacao: function (perfil) {
-      return rules.isMinistro(perfil) ? '/' : rules.MEMBRO_PATH;
+      return rules.isMinistro(perfil) ? '/' : rules.urlMembro();
     },
 
     codigoPerfil: function (perfil) {

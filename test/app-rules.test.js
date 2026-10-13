@@ -41,8 +41,9 @@ describe('resolvePerfil', () => {
 
   it('indica a URL de instalação de cada perfil', () => {
     assert.equal(rules.urlInstalacao('ministro'), '/');
-    assert.equal(rules.urlInstalacao('membro'), '/membro/');
+    assert.equal(rules.urlInstalacao('membro'), '/?k=8f2c');
     assert.equal(rules.urlInstalacao(undefined), '/');
+    assert.equal(rules.urlMembro(), '/?k=8f2c');
   });
 
   it('mostra mi para ministro e me para membro', () => {
