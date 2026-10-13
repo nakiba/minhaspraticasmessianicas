@@ -121,4 +121,12 @@ describe('casca do aplicativo', () => {
     assert.match(html, /top:\s*var\(--safe-top\)/);
     assert.match(html, /top:\s*calc\(var\(--tabbar-h\) \+ var\(--safe-top\)\)/);
   });
+
+  it('os campos de horas do Servir com o Tempo cabem no iPhone', () => {
+    const html = read('index.html');
+    assert.match(html, /id="stTimeInputsWrap"/);
+    assert.match(html, /::-webkit-inner-spin-button/);
+    assert.match(html, /grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\) auto/);
+    assert.match(html, /stTimeInputsWrap'\)\.style\.display = isVezes \? 'none' : ''/);
+  });
 });

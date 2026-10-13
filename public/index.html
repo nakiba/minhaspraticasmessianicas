@@ -26,7 +26,7 @@
   }catch(e){}
 })();
 </script>
-<meta name="app-version" content="1.14.3">
+<meta name="app-version" content="1.14.4">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -407,9 +407,16 @@
     gap:5px;
     font-size:.82rem;
     color:var(--ink-soft);
+    min-width:0;
+    max-width:100%;
+  }
+  .st-time-inputs span{
+    flex-shrink:0;
+    white-space:nowrap;
   }
   .st-time-inputs input{
     width:52px;
+    min-width:0;
     border:1px solid var(--line);
     border-radius:10px;
     padding:9px 8px;
@@ -417,6 +424,13 @@
     text-align:center;
     background:var(--paper);
     color:var(--ink);
+    -webkit-appearance:textfield;
+    appearance:textfield;
+  }
+  .st-time-inputs input::-webkit-outer-spin-button,
+  .st-time-inputs input::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
   }
   .st-form button{
     border:none;
@@ -1497,6 +1511,8 @@
   .st-form{
     flex-direction:column;
     align-items:stretch;
+    min-width:0;
+    max-width:100%;
   }
   .st-form select,
   .st-form button{
@@ -1505,14 +1521,21 @@
     min-height:44px;
   }
   .st-time-inputs{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;
     width:100%;
-    justify-content:flex-start;
+    max-width:100%;
+    min-width:0;
+    justify-content:stretch;
+    gap:6px 8px;
   }
   .st-time-inputs input{
-    flex:1;
-    width:auto;
+    width:100%;
+    max-width:none;
+    min-width:0;
     min-height:44px;
     font-size:16px;
+    padding:9px 6px;
   }
   .goal-st-form select,
   .goal-st-especifica-box input[type="text"],
@@ -1651,6 +1674,16 @@
     .st-form{flex-direction:row;flex-wrap:wrap;}
     .st-form select{flex:1;min-width:180px;width:auto;}
     .st-form button{width:auto;}
+    .st-time-inputs{
+      display:flex;
+      width:auto;
+      max-width:none;
+    }
+    .st-time-inputs input{
+      width:52px;
+      min-height:0;
+      padding:9px 8px;
+    }
     .donativo-form{flex-direction:row;}
     .donativo-form input{width:110px;}
     .donativo-form select{width:auto;flex:1;}
@@ -2197,7 +2230,7 @@
   <footer class="note">
     Os dados ficam salvos neste dispositivo, neste navegador. Use o backup para não perdê-los.
     <span class="backup-hint" id="backupHint"></span>
-    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.14.3</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
+    <span class="app-version-line"><span class="app-version" id="appVersion">versão 1.14.4</span> <span class="app-perfil" id="appPerfilLabel">mi</span></span>
   </footer>
 </div>
 
@@ -2251,10 +2284,10 @@
   <div id="printReportContent"></div>
 </div>
 
-<script src="app-rules.js?v=1.14.3"></script>
-<script src="app-core.js?v=1.14.3"></script>
+<script src="app-rules.js?v=1.14.4"></script>
+<script src="app-core.js?v=1.14.4"></script>
 <script>
-const APP_VERSION = '1.14.3';
+const APP_VERSION = '1.14.4';
 (function(){
   const Rules = window.PraticasRules;
   const Core = window.PraticasCore;
@@ -2988,7 +3021,7 @@ const APP_VERSION = '1.14.3';
     document.getElementById('stVezesNote').style.display = isVezes ? 'block' : 'none';
     document.getElementById('stConcluidaWrap').style.display = isGenericEspecifica ? 'flex' : 'none';
     document.getElementById('stConcluidaNote').style.display = isGenericEspecifica ? 'block' : 'none';
-    document.getElementById('stTimeInputsWrap').style.display = isVezes ? 'none' : 'flex';
+    document.getElementById('stTimeInputsWrap').style.display = isVezes ? 'none' : '';
     document.getElementById('stTimerBox').style.display = isVezes ? 'none' : 'flex';
 
     const hasContentToShow = isGenericEspecifica || isVezes;
